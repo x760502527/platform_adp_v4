@@ -11,11 +11,12 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
 
   return (
     <Modal
+      bodyStyle={{padding:'0px 24px'}}
+      width={866}
       destroyOnClose
-      title="新建规则"
+      title="新增租户"
       visible={modalVisible}
       onCancel={() => onCancel()}
-      footer={null}
     >
       {props.children}
     </Modal>

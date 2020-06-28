@@ -1,5 +1,5 @@
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, Dropdown, Menu, message, Input } from 'antd';
+import { Button, Divider, Dropdown, Menu, message, Input, Form, Row, Col, Tabs } from 'antd';
 import React, { useState, useRef } from 'react';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
@@ -8,6 +8,12 @@ import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
 import { queryRule, updateRule, addRule, removeRule } from './service';
+
+
+const layout = {
+  // labelCol: { span: 0 },
+  // wrapperCol: { span: 10 },
+};
 
 /**
  * 添加节点
@@ -78,31 +84,44 @@ const TableList: React.FC<{}> = () => {
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
-      title: '规则名称',
+      title: '租户',
       dataIndex: 'name',
-      rules: [
-        {
-          required: true,
-          message: '规则名称为必填项',
-        },
-      ],
+      hideInTable: true
     },
     {
-      title: '描述',
+      title: '租户名称',
+      dataIndex: 'name',
+      hideInTable: true
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'name',
+      hideInTable: true
+    },
+    {
+      title: '电子邮箱',
+      dataIndex: 'name',
+      hideInSearch: true
+    },
+    {
+      title: '租户名称',
       dataIndex: 'desc',
       valueType: 'textarea',
+      hideInSearch: true
     },
     {
-      title: '服务调用次数',
+      title: '姓名',
       dataIndex: 'callNo',
       sorter: true,
       hideInForm: true,
+      hideInSearch: true,
       renderText: (val: string) => `${val} 万`,
     },
     {
-      title: '状态',
+      title: '手机号',
       dataIndex: 'status',
       hideInForm: true,
+      hideInSearch: true,
       valueEnum: {
         0: { text: '关闭', status: 'Default' },
         1: { text: '运行中', status: 'Processing' },
@@ -111,11 +130,12 @@ const TableList: React.FC<{}> = () => {
       },
     },
     {
-      title: '上次调度时间',
+      title: '行业版本',
       dataIndex: 'updatedAt',
       sorter: true,
       valueType: 'dateTime',
       hideInForm: true,
+      hideInSearch: true,
       renderFormItem: (item, { defaultRender, ...rest }, form) => {
         const status = form.getFieldValue('status');
         if (`${status}` === '0') {
@@ -139,10 +159,10 @@ const TableList: React.FC<{}> = () => {
               setStepFormValues(record);
             }}
           >
-            配置
+            修改
           </a>
           <Divider type="vertical" />
-          <a href="">订阅警报</a>
+          <a style={{ color: '#FF4B40' }} href="">删除</a>
         </>
       ),
     },
@@ -151,7 +171,7 @@ const TableList: React.FC<{}> = () => {
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
-        headerTitle="查询表格"
+        headerTitle="租户列表"
         actionRef={actionRef}
         rowKey="key"
         toolBarRender={(action, { selectedRows }) => [
@@ -171,7 +191,6 @@ const TableList: React.FC<{}> = () => {
                   selectedKeys={[]}
                 >
                   <Menu.Item key="remove">批量删除</Menu.Item>
-                  <Menu.Item key="approval">批量审批</Menu.Item>
                 </Menu>
               }
             >
@@ -181,55 +200,103 @@ const TableList: React.FC<{}> = () => {
             </Dropdown>
           ),
         ]}
-        tableAlertRender={({ selectedRowKeys, selectedRows }) => (
-          <div>
-            已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-            <span>
-              服务调用次数总计 {selectedRows.reduce((pre, item) => pre + item.callNo, 0)} 万
-            </span>
-          </div>
-        )}
+        tableAlertRender={false}
         request={(params, sorter, filter) => queryRule({ ...params, sorter, filter })}
         columns={columns}
         rowSelection={{}}
       />
       <CreateForm onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
-        <ProTable<TableListItem, TableListItem>
-          onSubmit={async (value) => {
-            const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          rowKey="key"
-          type="form"
-          columns={columns}
-          rowSelection={{}}
-        />
+        <Tabs defaultActiveKey="1">
+          <Tabs.TabPane tab="基础资料" key="1">
+            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="note" label="E-mail" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="不能为空，由6~16位英文字符、数字组成" {...layout} name="note" label="初始密码" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="不能重复，必填，长度≤32个字" {...layout} name="note" label="租户名称" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="note" label="姓名" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="不能为空，由11位数字组成" {...layout} name="note" label="手机号" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="请选择行业版本" {...layout} name="note" label="行业版本" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          </Tabs.TabPane>
+        </Tabs>
+
       </CreateForm>
-      {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
-          onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleUpdateModalVisible(false);
-              setStepFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={stepFormValues}
-        />
-      ) : null}
+          modalVisible={updateModalVisible}
+          onCancel={() => handleUpdateModalVisible(false)}>
+          <Tabs defaultActiveKey="1">
+          <Tabs.TabPane tab="基础资料" key="1">
+            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="note" label="E-mail" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="不能为空，由6~16位英文字符、数字组成" {...layout} name="note" label="初始密码" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="不能重复，必填，长度≤32个字" {...layout} name="note" label="租户名称" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="note" label="姓名" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={[16,16]}>
+                <Col span={12}>
+                  <Form.Item help="不能为空，由11位数字组成" {...layout} name="note" label="手机号" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item help="请选择行业版本" {...layout} name="note" label="行业版本" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          </Tabs.TabPane>
+        </Tabs>
+
+        </UpdateForm>
     </PageHeaderWrapper>
   );
 };
