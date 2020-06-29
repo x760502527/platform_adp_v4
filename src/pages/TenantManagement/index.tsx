@@ -7,7 +7,7 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule, queryEntityinfo } from './service';
+import { queryEntityinfoList, addEntityinfo } from './service';
 
 
 const layout = {
@@ -84,68 +84,45 @@ const TableList: React.FC<{}> = () => {
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
-      title: '租户',
-      dataIndex: 'name',
-      hideInTable: true
-    },
-    {
       title: '租户名称',
-      dataIndex: 'name',
+      dataIndex: 'entityname',
       hideInTable: true
     },
     {
       title: '联系电话',
-      dataIndex: 'name',
+      dataIndex: 'cellphone',
       hideInTable: true
     },
     {
       title: '电子邮箱',
-      dataIndex: 'name',
+      dataIndex: 'email',
       hideInSearch: true
     },
     {
       title: '租户名称',
-      dataIndex: 'desc',
+      dataIndex: 'entityname',
       valueType: 'textarea',
       hideInSearch: true
     },
     {
       title: '姓名',
-      dataIndex: 'callNo',
+      dataIndex: 'realname',
       sorter: true,
       hideInForm: true,
       hideInSearch: true,
-      renderText: (val: string) => `${val} 万`,
     },
     {
       title: '手机号',
-      dataIndex: 'status',
+      dataIndex: 'cellphone',
       hideInForm: true,
       hideInSearch: true,
-      valueEnum: {
-        0: { text: '关闭', status: 'Default' },
-        1: { text: '运行中', status: 'Processing' },
-        2: { text: '已上线', status: 'Success' },
-        3: { text: '异常', status: 'Error' },
-      },
     },
     {
       title: '行业版本',
-      dataIndex: 'updatedAt',
+      dataIndex: 'rolename',
       sorter: true,
-      valueType: 'dateTime',
       hideInForm: true,
       hideInSearch: true,
-      renderFormItem: (item, { defaultRender, ...rest }, form) => {
-        const status = form.getFieldValue('status');
-        if (`${status}` === '0') {
-          return false;
-        }
-        if (`${status}` === '3') {
-          return <Input {...rest} placeholder="请输入异常原因！" />;
-        }
-        return defaultRender(item);
-      },
     },
     {
       title: '操作',
@@ -167,6 +144,12 @@ const TableList: React.FC<{}> = () => {
       ),
     },
   ];
+
+  const add = async ()=>{
+    const datas = await addEntityinfo({})
+
+    handleModalVisible(false)
+  }
 
   return (
     <PageHeaderWrapper>
@@ -202,20 +185,27 @@ const TableList: React.FC<{}> = () => {
         ]}
         tableAlertRender={false}
         request={async (params, sorter, filter) => {
-          let cParams = {
+          let cParams:any = {
+            ...params,
             pageNum:params['current'],
             pageSize:params['pageSize']
           }
-          const datas = await queryEntityinfo({ ...cParams, sorter, filter })
-          return datas['data']['list']
+          cParams.current = null
+
+          const datas = await queryEntityinfoList({ ...cParams, sorter, filter })
+          return {
+            data:datas['data']['list'],
+            total:datas['data']['total'],
+            success:datas['success']
+          }
         }}
         columns={columns}
         rowSelection={{}}
       />
-      <CreateForm onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
+      <CreateForm onOk={() => add()} onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
         <Tabs defaultActiveKey="1">
           <Tabs.TabPane tab="基础资料" key="1">
-            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
+            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 6 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 18 } } }}>
               <Row gutter={[16,16]}>
                 <Col span={12}>
                   <Form.Item help="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="note" label="E-mail" rules={[{ required: true }]}>
