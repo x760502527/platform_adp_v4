@@ -1,13 +1,19 @@
-import request from 'umi-request';
+import request from '@/utils/request';
 
-export async function queryEntityinfo(params?:any ) {
+export async function queryEntityinfoList(params?:any ) {
   return request('/api/entityinfo/listEntityinfos', {
     params,
   });
 }
 
-export async function removeRule(params: { key: number[] }) {
-  return request('/api/rule', {
+export async function queryEntityinfo(params?:any ) {
+  return request('/api/entityinfo/queryEntityinfo', {
+    params,
+  });
+}
+
+export async function removeEntityinfo(params:any) {
+  return request('/api/entityinfo/deleteEntity', {
     method: 'POST',
     data: {
       ...params,
@@ -16,8 +22,8 @@ export async function removeRule(params: { key: number[] }) {
   });
 }
 
-export async function addRule(params: TableListParams) {
-  return request('/api/rule', {
+export async function addEntityinfo(params: any) {
+  return request('/api/entityinfo/createEntity', {
     method: 'POST',
     data: {
       ...params,
@@ -26,8 +32,8 @@ export async function addRule(params: TableListParams) {
   });
 }
 
-export async function updateRule(params: TableListParams) {
-  return request('/api/rule', {
+export async function updateEntityinfo(params: any) {
+  return request('/api/entityinfo/updateEntity', {
     method: 'POST',
     data: {
       ...params,

@@ -3,11 +3,12 @@ import { Modal } from 'antd';
 
 interface CreateFormProps {
   modalVisible: boolean;
+  onOk: () => void;
   onCancel: () => void;
 }
 
 const CreateForm: React.FC<CreateFormProps> = (props) => {
-  const { modalVisible, onCancel } = props;
+  const { modalVisible, onCancel , onOk } = props;
 
   return (
     <Modal
@@ -17,6 +18,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
       title="新增租户"
       visible={modalVisible}
       onCancel={() => onCancel()}
+      onOk={() => onOk()}
     >
       {props.children}
     </Modal>
