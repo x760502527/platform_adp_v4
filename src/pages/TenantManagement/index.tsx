@@ -279,7 +279,6 @@ const TableList: React.FC<{}> = () => {
           </Tabs.TabPane>
         </Tabs>
       </CreateForm>
-<<<<<<< HEAD
       <UpdateForm
         modalVisible={updateModalVisible}
         onCancel={() => handleUpdateModalVisible(false)}
@@ -294,15 +293,6 @@ const TableList: React.FC<{}> = () => {
               }}
             >
               <Row gutter={[16, 16]}>
-=======
-        <UpdateForm
-          modalVisible={updateModalVisible}
-          onCancel={() => handleUpdateModalVisible(false)}>
-          <Tabs defaultActiveKey="2">
-          <Tabs.TabPane tab="基础资料" key="2">
-            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
-              <Row gutter={[16,16]}>
->>>>>>> 5d7cb06fdb905ef9dab10900d87bfade40bb12f1
                 <Col span={12}>
                   <Form.Item
                     help="唯一标识，由英文字符、数字组成，长度<64个字符"
