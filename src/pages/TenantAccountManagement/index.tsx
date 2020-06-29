@@ -1,5 +1,5 @@
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, Dropdown, Menu, message, Input } from 'antd';
+import { Button, Divider, Dropdown, Menu, message } from 'antd';
 import React, { useState, useRef } from 'react';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
@@ -78,8 +78,9 @@ const TableList: React.FC<{}> = () => {
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
-      title: '规则名称',
+      title: '序号',
       dataIndex: 'name',
+      sorter: true,
       rules: [
         {
           required: true,
@@ -88,44 +89,28 @@ const TableList: React.FC<{}> = () => {
       ],
     },
     {
-      title: '描述',
+      title: '租户名称',
       dataIndex: 'desc',
       valueType: 'textarea',
     },
     {
-      title: '服务调用次数',
+      title: '电子邮箱',
       dataIndex: 'callNo',
-      sorter: true,
       hideInForm: true,
-      renderText: (val: string) => `${val} 万`,
     },
     {
-      title: '状态',
+      title: '姓名',
       dataIndex: 'status',
       hideInForm: true,
-      valueEnum: {
-        0: { text: '关闭', status: 'Default' },
-        1: { text: '运行中', status: 'Processing' },
-        2: { text: '已上线', status: 'Success' },
-        3: { text: '异常', status: 'Error' },
-      },
     },
     {
-      title: '上次调度时间',
+      title: '手机号码',
       dataIndex: 'updatedAt',
-      sorter: true,
-      valueType: 'dateTime',
       hideInForm: true,
-      renderFormItem: (item, { defaultRender, ...rest }, form) => {
-        const status = form.getFieldValue('status');
-        if (`${status}` === '0') {
-          return false;
-        }
-        if (`${status}` === '3') {
-          return <Input {...rest} placeholder="请输入异常原因！" />;
-        }
-        return defaultRender(item);
-      },
+    },
+    {
+      title: '用户状态',
+      dataIndex: 'status',
     },
     {
       title: '操作',
@@ -139,10 +124,18 @@ const TableList: React.FC<{}> = () => {
               setStepFormValues(record);
             }}
           >
-            配置
+            详情
           </a>
           <Divider type="vertical" />
-          <a href="">订阅警报</a>
+          <a
+            href=""
+            onClick={() => {
+              handleUpdateModalVisible(true);
+              setStepFormValues(record);
+            }}
+          >
+            重置密码
+          </a>
         </>
       ),
     },
