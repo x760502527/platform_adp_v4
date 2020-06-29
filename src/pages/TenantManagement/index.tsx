@@ -7,7 +7,7 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import { queryRule, updateRule, addRule, removeRule, queryEntityinfo } from './service';
 
 
 const layout = {
@@ -201,7 +201,14 @@ const TableList: React.FC<{}> = () => {
           ),
         ]}
         tableAlertRender={false}
-        request={(params, sorter, filter) => queryRule({ ...params, sorter, filter })}
+        request={async (params, sorter, filter) => {
+          let cParams = {
+            pageNum:params['current'],
+            pageSize:params['pageSize']
+          }
+          const datas = await queryEntityinfo({ ...cParams, sorter, filter })
+          return datas['data']['list']
+        }}
         columns={columns}
         rowSelection={{}}
       />
@@ -248,13 +255,12 @@ const TableList: React.FC<{}> = () => {
             </Form>
           </Tabs.TabPane>
         </Tabs>
-
       </CreateForm>
         <UpdateForm
           modalVisible={updateModalVisible}
           onCancel={() => handleUpdateModalVisible(false)}>
-          <Tabs defaultActiveKey="1">
-          <Tabs.TabPane tab="基础资料" key="1">
+          <Tabs defaultActiveKey="2">
+          <Tabs.TabPane tab="基础资料" key="2">
             <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
               <Row gutter={[16,16]}>
                 <Col span={12}>
