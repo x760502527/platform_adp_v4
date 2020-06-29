@@ -7,7 +7,7 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import { queryRule, updateRule, addRule, removeRule, queryEntityinfo } from './service';
 
 const layout = {
   // labelCol: { span: 0 },
@@ -182,7 +182,14 @@ const TableList: React.FC<{}> = () => {
           ),
         ]}
         tableAlertRender={false}
-        request={(params, sorter, filter) => queryRule({ ...params, sorter, filter })}
+        request={async (params, sorter, filter) => {
+          let cParams = {
+            pageNum:params['current'],
+            pageSize:params['pageSize']
+          }
+          const datas = await queryEntityinfo({ ...cParams, sorter, filter })
+          return datas['data']['list']
+        }}
         columns={columns}
         rowSelection={{}}
       />
@@ -272,6 +279,7 @@ const TableList: React.FC<{}> = () => {
           </Tabs.TabPane>
         </Tabs>
       </CreateForm>
+<<<<<<< HEAD
       <UpdateForm
         modalVisible={updateModalVisible}
         onCancel={() => handleUpdateModalVisible(false)}
@@ -286,6 +294,15 @@ const TableList: React.FC<{}> = () => {
               }}
             >
               <Row gutter={[16, 16]}>
+=======
+        <UpdateForm
+          modalVisible={updateModalVisible}
+          onCancel={() => handleUpdateModalVisible(false)}>
+          <Tabs defaultActiveKey="2">
+          <Tabs.TabPane tab="基础资料" key="2">
+            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
+              <Row gutter={[16,16]}>
+>>>>>>> 5d7cb06fdb905ef9dab10900d87bfade40bb12f1
                 <Col span={12}>
                   <Form.Item
                     help="唯一标识，由英文字符、数字组成，长度<64个字符"
