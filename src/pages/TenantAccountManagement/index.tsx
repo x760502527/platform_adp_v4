@@ -95,18 +95,15 @@ const TableList: React.FC<{}> = () => {
     },
     {
       title: '电子邮箱',
-      dataIndex: 'callNo',
-      hideInForm: true,
+      dataIndex: 'callNo'
     },
     {
       title: '姓名',
-      dataIndex: 'status',
-      hideInForm: true,
+      dataIndex: 'status'
     },
     {
       title: '手机号码',
-      dataIndex: 'updatedAt',
-      hideInForm: true,
+      dataIndex: 'updatedAt'
     },
     {
       title: '用户状态',
