@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from 'antd';
 
 interface CreateFormProps {
@@ -7,8 +7,15 @@ interface CreateFormProps {
 }
 
 const CreateForm: React.FC<CreateFormProps> = (props) => {
-  const { modalVisible, onCancel } = props;
-
+  console.log(props)
+  const { modalVisible, onCancel, children } = props;
+  console.log(children)
+  const [ closeModel, isClose ] = useState(false)
+  const onSubmit = function():void {
+    console.log(closeModel)
+    isClose(true)
+    onCancel()
+  }
   return (
     <Modal
       width={984}
@@ -16,10 +23,10 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
       title="创建版本"
       visible={modalVisible}
       onCancel={() => onCancel()}
+      onOk={onSubmit}
     >
       {props.children}
     </Modal>
   );
 };
-
 export default CreateForm;

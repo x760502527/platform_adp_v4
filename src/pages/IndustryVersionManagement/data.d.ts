@@ -1,16 +1,28 @@
+// 请求返回数据的接口
+interface RequestData {
+  data: Datum[];
+  success: boolean;
+  total: number;
+}
+// // 请求添加数据的接口
+// interface requestAddData {
+
+// }
+// 调用后台接口的前台接口
+interface ApiListItem {
+  id: number,
+  rolename: string,
+  roleflag: number
+}
+// 表格中列表项接口
 export interface TableListItem {
-  key: number;
-  disabled?: boolean;
-  href: string;
-  avatar: string;
-  name: string;
-  owner: string;
-  desc: string;
-  callNo: number;
-  status: string;
-  updatedAt: Date;
-  createdAt: Date;
-  progress: number;
+  key?: number;
+  industyTableid?:number;
+  roleProps?:number;
+  tenant?:string;
+  industyVersionName?:string;
+  note?:string;
+  option?:number;
 }
 
 export interface TableListPagination {
@@ -25,12 +37,13 @@ export interface TableListData {
 }
 
 export interface TableListParams {
-  status?: string;
-  name?: string;
-  desc?: string;
-  key?: number;
+  navigatePages?: number;
+  navigatepageNums?: number;
+  navigatepageNums?: number;
+  pageNum?: number;  
   pageSize?: number;
-  currentPage?: number;
-  filter?: { [key: string]: any[] };
-  sorter?: { [key: string]: any };
+  current?: number;
+  prePage?:number;
+  // filter?: { [key: string]: any[] };
+  // sorter?: { [key: string]: any };
 }
