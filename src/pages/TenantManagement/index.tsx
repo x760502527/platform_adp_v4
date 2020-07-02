@@ -7,7 +7,8 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import { TableListItem } from './data.d';
-import { queryEntityinfoList, addEntityinfo } from './service';
+import { queryEntityinfoList, addEntityinfo, updateEntityinfo, removeEntityinfo } from './service';
+import { useForm } from 'antd/lib/form/Form';
 
 
 const layout = {
@@ -19,10 +20,10 @@ const layout = {
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: TableListItem) => {
+const handleAdd = async (fields: any) => {
   const hide = message.loading('正在添加');
   try {
-    await addRule({ ...fields });
+    await addEntityinfo({ ...fields });
     hide();
     message.success('添加成功');
     return true;
@@ -37,13 +38,11 @@ const handleAdd = async (fields: TableListItem) => {
  * 更新节点
  * @param fields
  */
-const handleUpdate = async (fields: FormValueType) => {
+const handleUpdate = async (fields: any) => {
   const hide = message.loading('正在配置');
   try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
+    await updateEntityinfo({
+      ...fields
     });
     hide();
 
@@ -64,8 +63,8 @@ const handleRemove = async (selectedRows: TableListItem[]) => {
   const hide = message.loading('正在删除');
   if (!selectedRows) return true;
   try {
-    await removeRule({
-      key: selectedRows.map((row) => row.key),
+    await removeEntityinfo({
+      entityId : selectedRows.map((row) => row.key),
     });
     hide();
     message.success('删除成功，即将刷新');
@@ -82,6 +81,10 @@ const TableList: React.FC<{}> = () => {
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<any>();
+  const [form] = Form.useForm();
+  const [updateForm] = Form.useForm();
+
   const columns: ProColumns<TableListItem>[] = [
     {
       title: '租户名称',
@@ -134,6 +137,7 @@ const TableList: React.FC<{}> = () => {
             onClick={() => {
               handleUpdateModalVisible(true);
               setStepFormValues(record);
+              setUpdateFormValues(record)
             }}
           >
             修改
@@ -145,18 +149,30 @@ const TableList: React.FC<{}> = () => {
     },
   ];
 
-  const add = async ()=>{
-    const datas = await addEntityinfo({})
-
-    handleModalVisible(false)
+  const setUpdateFormValues = (record:any)=>{
+    updateForm.setFieldsValue(record)
   }
+  
+  const add = async ()=>{
+    const fv=form.getFieldsValue()
+    form.submit()
+  }
+  
+  const onFinish = (values:any)=>{
+    handleAdd(values)
+  }
+
+  const revise =(values:any)=>{
+    handleUpdate(values)
+  }
+
 
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
         headerTitle="租户列表"
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="entityId"
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
             <PlusOutlined /> 新建
@@ -205,39 +221,82 @@ const TableList: React.FC<{}> = () => {
       <CreateForm onOk={() => add()} onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
         <Tabs defaultActiveKey="1">
           <Tabs.TabPane tab="基础资料" key="1">
-            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 6 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 18 } } }}>
+            <Form onFinish={onFinish} form={form} name="control-ref"  {...{ labelCol: { xs: { span: 24 }, sm: { span: 6 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 18 } } }}>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="note" label="E-mail" rules={[{ required: true }]}>
+                  <Form.Item extra="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="email" label="E-mail" rules={[{ 
+                    required: true,
+                    message:'请输入E-mail'
+                    },
+                    { 
+                      max: 64,
+                      message:'长度小于64个字符'
+                      },
+                    { 
+
+                      pattern: /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/,
+                      message:'请输入正确的邮箱账号'
+                      }]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="不能为空，由6~16位英文字符、数字组成" {...layout} name="note" label="初始密码" rules={[{ required: true }]}>
+                  <Form.Item extra="不能为空，由6~16位英文字符、数字组成" {...layout} name="pwd" label="初始密码" rules={[{ 
+                    required: true,
+                    message:'请输入初始密码'
+                    },
+                    { 
+                      pattern: /^([A-Za-z0-9_\-\.]){6,16}$/,
+                      message:'请输入正确的密码格式'
+                      }]}>
                     <Input />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="不能重复，必填，长度≤32个字" {...layout} name="note" label="租户名称" rules={[{ required: true }]}>
+                  <Form.Item extra="不能重复，必填，长度≤32个字" {...layout} name="entityname" label="租户名称" rules={[{ 
+                    required: true ,
+                    message:'请输入租户名称'
+                    },
+                    { 
+                      max: 64,
+                      message:'长度小于32个字符'
+                      },]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="note" label="姓名" rules={[{ required: true }]}>
+                  <Form.Item extra="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="realname" label="姓名" rules={[{ 
+                    required: true ,
+                    message:'请输入姓名'
+                    },
+                    { 
+                      max: 20,
+                      message:'长度小于20个字符'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="不能为空，由11位数字组成" {...layout} name="note" label="手机号" rules={[{ required: true }]}>
+                  <Form.Item extra="不能为空，由11位数字组成" {...layout} name="cellphone" label="手机号" rules={[{ 
+                    required: true,
+                    message:'请输入手机号'
+                    },
+                    { 
+                      pattern:/[0-9]{11}/,
+                      message:'请输入正确的手机号格式'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="请选择行业版本" {...layout} name="note" label="行业版本" rules={[{ required: true }]}>
+                  <Form.Item extra="请选择行业版本" {...layout} name="rolename" label="行业版本" rules={[{ 
+                    required: true ,
+                    message:'请输入行业版本'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -251,39 +310,82 @@ const TableList: React.FC<{}> = () => {
           onCancel={() => handleUpdateModalVisible(false)}>
           <Tabs defaultActiveKey="2">
           <Tabs.TabPane tab="基础资料" key="2">
-            <Form name="control-ref" {...{ labelCol: { xs: { span: 24 }, sm: { span: 8 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 16 } } }}>
+          <Form onFinish={revise} form={updateForm} name="control-ref"  {...{ labelCol: { xs: { span: 24 }, sm: { span: 6 }, }, wrapperCol: { xs: { span: 24 }, sm: { span: 18 } } }}>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="note" label="E-mail" rules={[{ required: true }]}>
+                  <Form.Item extra="唯一标识，由英文字符、数字组成，长度<64个字符" {...layout} name="email" label="E-mail" rules={[{ 
+                    required: true,
+                    message:'请输入E-mail'
+                    },
+                    { 
+                      max: 64,
+                      message:'长度小于64个字符'
+                      },
+                    { 
+
+                      pattern: /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/,
+                      message:'请输入正确的邮箱账号'
+                      }]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="不能为空，由6~16位英文字符、数字组成" {...layout} name="note" label="初始密码" rules={[{ required: true }]}>
+                  <Form.Item extra="不能为空，由6~16位英文字符、数字组成" {...layout} name="pwd" label="初始密码" rules={[{ 
+                    required: true,
+                    message:'请输入初始密码'
+                    },
+                    { 
+                      pattern: /^([A-Za-z0-9_\-\.]){6,16}$/,
+                      message:'请输入正确的密码格式'
+                      }]}>
                     <Input />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="不能重复，必填，长度≤32个字" {...layout} name="note" label="租户名称" rules={[{ required: true }]}>
+                  <Form.Item extra="不能重复，必填，长度≤32个字" {...layout} name="entityname" label="租户名称" rules={[{ 
+                    required: true ,
+                    message:'请输入租户名称'
+                    },
+                    { 
+                      max: 64,
+                      message:'长度小于32个字符'
+                      },]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="note" label="姓名" rules={[{ required: true }]}>
+                  <Form.Item extra="默认商家联系人，字母和汉字组成，长度<20个字" {...layout} name="realname" label="姓名" rules={[{ 
+                    required: true ,
+                    message:'请输入姓名'
+                    },
+                    { 
+                      max: 20,
+                      message:'长度小于20个字符'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
               </Row>
               <Row gutter={[16,16]}>
                 <Col span={12}>
-                  <Form.Item help="不能为空，由11位数字组成" {...layout} name="note" label="手机号" rules={[{ required: true }]}>
+                  <Form.Item extra="不能为空，由11位数字组成" {...layout} name="cellphone" label="手机号" rules={[{ 
+                    required: true,
+                    message:'请输入手机号'
+                    },
+                    { 
+                      pattern:/[0-9]{11}/,
+                      message:'请输入正确的手机号格式'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item help="请选择行业版本" {...layout} name="note" label="行业版本" rules={[{ required: true }]}>
+                  <Form.Item extra="请选择行业版本" {...layout} name="rolename" label="行业版本" rules={[{ 
+                    required: true ,
+                    message:'请输入行业版本'
+                    }]}>
                     <Input />
                   </Form.Item>
                 </Col>
