@@ -1,18 +1,25 @@
 import request from 'umi-request';
-import { TableListParams, TableListItem, ApiListItem, RequestData, requestAddData} from './data.d';
+import { TableListParams, TableListItem, ApiListItem, RequestData} from './data.d';
 
+// let commonParams:TableListParams|undefined;
 // 添加行业版本
 export async function addRule(params: TableListItem) {
-  console.log(params)
-  return request('/api/entityrole/listEntityroles', {
+  // console.log(params)
+  const msg:any = await request('/api/entityrole/updateEntityrole', {
     method: 'POST',
     params: {
       rolename: params.industyVersionName
     }
   });
+  // if(commonParams) {
+  //   console.log('刷新')
+  //   getRule(commonParams)
+  // }
+  return msg;
 }
 // 获取行业版本
 export async function getRule(params?: TableListParams) {
+  // commonParams = params;
   const mag:any = await request<RequestData>('/api/entityrole/listEntityroles', {
     method: 'POST',
     params: {

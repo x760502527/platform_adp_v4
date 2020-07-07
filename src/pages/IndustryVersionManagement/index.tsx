@@ -8,21 +8,22 @@ import CreateForm from './components/CreateForm';
 import Tree from './components/Tree';
 // 引入CSS
 import "antd/dist/antd.css";
+import "../../assets/css/IndustryVersionManagement/index.css"
 import "../../assets/css/common/common.css";
 // 引入接口
 import { TableListItem } from './data.d';
-// 引入封装网络请求
-import { getRule } from './service'
-
+// 引入封装网络请求获取所有项
+import { getRule, addRule } from './service'
+// 从Select组件中拿到Option
 const { Option } = Select;
-const FormItem = Form.Item;
 
 // 创建TableList组件：
 const TableList: React.FC<{}> = () => {
   // 定义创建/更新表格的hook
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [showTenantSearch,hideTenantSearch] = useState<boolean>(true)
+  const [showTenantSearch,hideTenantSearch] = useState<boolean>(true);
+  const [industryVersionName, changeName] = useState<string>('')
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
@@ -77,13 +78,13 @@ const TableList: React.FC<{}> = () => {
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              // setStepFormValues(record);
             }}
           >
             修改
           </a>
           <Divider type="vertical" />
           <a 
+            onClick={()=>{}}
             style={{color:'#FF4B40'}} 
           >删除</a>
         </>
@@ -91,6 +92,18 @@ const TableList: React.FC<{}> = () => {
     },
   ];
   const defaultValue:string = '';
+  // const onFinish = (value:object[]) => {
+  //   console.log(value);
+  // }
+  const onSubmit = async (val:string) => {
+    let msg = addRule({industyVersionName: val});
+    msg.then(res => {
+      if(res.success) {
+        actionRef.current.reloadAndRest();
+        handleModalVisible(false);
+      }
+    })
+  }
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
@@ -100,7 +113,7 @@ const TableList: React.FC<{}> = () => {
         rowKey="key"
         columns={columns}
         rowSelection={{}}
-        rowClassName={(record, index) => {console.log(index); return index%2=== 1?"rowWhite":"rowDeep"}}
+        rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
         request={(params) => getRule({ ...params})}
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
@@ -134,20 +147,35 @@ const TableList: React.FC<{}> = () => {
       />
       <CreateForm 
         onCancel={() => handleModalVisible(false)} 
-        modalVisible={createModalVisible 
-         }
+        modalVisible={createModalVisible}
         >
-        <Form name="control-ref">
+        <Form 
+        name="control-ref"
+        className="createForm"
+        >
           <Row>
             <Col span="12">
-              <Form.Item name="note" label="行业版本名称" rules={[{ required: true }]}>
-                <Input value={defaultValue} />  
+              <Form.Item name="note" label="行业版本名称" rules={[{ required: true, message: '请输入内容!'}]}>
+                <Input value={industryVersionName} onChange={ val => changeName(val.target.value) } />  
               </Form.Item>
             </Col>
           </Row>
-          <FormItem>
+          <Form.Item>
             <Tree />
-          </FormItem>
+          </Form.Item>
+          <Divider />
+          <Row justify={"end"}>
+            <Col span="2" className="footer-button">
+              <Form.Item name="button">
+                <Button onClick={() => {handleModalVisible(false);console.log(defaultValue)}}>取消</Button> 
+              </Form.Item>
+            </Col>
+            <Col span="2" className="footer-button">
+              <Form.Item name="button">
+                <Button htmlType="submit" type="primary" onClick={() => onSubmit(industryVersionName)} >提交</Button> 
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </CreateForm>
       <CreateForm onCancel={() => handleUpdateModalVisible(false)} modalVisible={updateModalVisible}>
@@ -164,9 +192,9 @@ const TableList: React.FC<{}> = () => {
               </Form.Item>
             </Col>
           </Row>
-          <FormItem>
+          <Form.Item>
             <Tree />
-          </FormItem>
+          </Form.Item>
         </Form>
       </CreateForm>
     </PageHeaderWrapper>
