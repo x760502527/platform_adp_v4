@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Button, DatePicker, Input, Modal, Radio, Select, Steps } from 'antd';
+import { CheckCircleTwoTone } from '@ant-design/icons';
+import { Form, Button, Input, Modal, Radio, Select, Steps, Row, Col, Divider, Checkbox } from 'antd';
 
 import { TableListItem } from '../data.d';
+
+// 引入样式
+import '../../../assets/css/TenantAccountManager/index.css'
 
 export interface FormValueType extends Partial<TableListItem> {
   target?: string;
@@ -9,6 +13,7 @@ export interface FormValueType extends Partial<TableListItem> {
   type?: string;
   time?: string;
   frequency?: string;
+  tenant?: string;
 }
 
 export interface UpdateFormProps {
@@ -19,9 +24,9 @@ export interface UpdateFormProps {
 }
 const FormItem = Form.Item;
 const { Step } = Steps;
-const { TextArea } = Input;
+// const { TextArea } = Input;
 const { Option } = Select;
-const RadioGroup = Radio.Group;
+// const RadioGroup = Radio.Group;
 
 export interface UpdateFormState {
   formVals: FormValueType;
@@ -29,8 +34,8 @@ export interface UpdateFormState {
 }
 
 const formLayout = {
-  labelCol: { span: 7 },
-  wrapperCol: { span: 13 },
+  labelCol: { span: 5 },
+  wrapperCol: { span: 17 },
 };
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => {
@@ -75,68 +80,243 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
   const renderContent = () => {
     if (currentStep === 1) {
       return (
-        <>
-          <FormItem name="target" label="监控对象">
-            <Select style={{ width: '100%' }}>
-              <Option value="0">表一</Option>
-              <Option value="1">表二</Option>
-            </Select>
-          </FormItem>
-          <FormItem name="template" label="规则模板">
-            <Select style={{ width: '100%' }}>
-              <Option value="0">规则模板一</Option>
-              <Option value="1">规则模板二</Option>
-            </Select>
-          </FormItem>
-          <FormItem name="type" label="规则类型">
-            <RadioGroup>
-              <Radio value="0">强</Radio>
-              <Radio value="1">弱</Radio>
-            </RadioGroup>
-          </FormItem>
+        <> 
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">商家选择：</span><span className="info">填写信息填写信息填写信息</span>
+            </Col>
+            <Col span="12">
+              <span className="label">区域机构：</span><span className="info">填写信息填写信息填写信息</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">登录用户名：</span><span className="info">SHKLSFLKLSLL</span>
+            </Col>
+            <Col span="12">
+              <span className="label name">姓</span><span className="name-end">名：</span><span className="info">填写信</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">登录密码：</span><span className="info">AAAAAAAA</span>
+            </Col>
+            <Col span="12">
+              <span className="label">手机号码：</span><span className="info">131-3546-1547</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="24">
+              <span className="label">是否冻结：</span><span className="info">公开</span>
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+          </Row>
+          <Row>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+            <Col span="3">
+              <FormItem name="tenant">
+                <Checkbox>Apple</Checkbox>
+              </FormItem>
+            </Col>
+          </Row>
         </>
       );
     }
     if (currentStep === 2) {
       return (
         <>
-          <FormItem
-            name="time"
-            label="开始时间"
-            rules={[{ required: true, message: '请选择开始时间！' }]}
-          >
-            <DatePicker
-              style={{ width: '100%' }}
-              showTime
-              format="YYYY-MM-DD HH:mm:ss"
-              placeholder="选择开始时间"
-            />
-          </FormItem>
-          <FormItem name="frequency" label="调度周期">
-            <Select style={{ width: '100%' }}>
-              <Option value="month">月</Option>
-              <Option value="week">周</Option>
-            </Select>
-          </FormItem>
+          <Row justify="center" align="middle" className="done-container">
+            <Col span="7" >
+              <CheckCircleTwoTone twoToneColor="#52c41a" className="done-icon" />
+              <span className="done-title">操作成功</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">商家选择：</span><span className="info">填写信息填写信息填写信息</span>
+            </Col>
+            <Col span="12">
+              <span className="label">区域机构：</span><span className="info">填写信息填写信息填写信息</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">登录用户名：</span><span className="info">SHKLSFLKLSLL</span>
+            </Col>
+            <Col span="12">
+              <span className="label name">姓</span><span className="name-end">名：</span><span className="info">填写信</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">登录密码：</span><span className="info">AAAAAAAA</span>
+            </Col>
+            <Col span="12">
+              <span className="label">手机号码：</span><span className="info">131-3546-1547</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="24">
+              <span className="label">是否冻结：</span><span className="info">公开</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="24">
+              <span className="label">租户权限：</span><span className="info">管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员</span>
+            </Col>
+          </Row>
         </>
       );
     }
     return (
       <>
-        <FormItem
-          name="name"
-          label="规则名称"
-          rules={[{ required: true, message: '请输入规则名称！' }]}
-        >
-          <Input placeholder="请输入" />
-        </FormItem>
-        <FormItem
-          name="desc"
-          label="规则描述"
-          rules={[{ required: true, message: '请输入至少五个字符的规则描述！', min: 5 }]}
-        >
-          <TextArea rows={4} placeholder="请输入至少五个字符" />
-        </FormItem>
+      <Row >
+        <Col span="12">
+          <FormItem
+            name="tenant"
+            label="租户选择"
+            extra="请选择租户类型"
+            rules={[{ required: true, message: '请选择租户类型' }]}
+          >
+            <Select placeholder="请选择">
+              <Option value="Option1">租户1</Option>
+              <Option value="Option2">租户2</Option>
+            </Select>
+          </FormItem>
+        </Col>
+        <Col span="12">
+          <FormItem
+            name="name"
+            label="姓名"
+            extra="默认商家联系人，字母和汉字组成，长度<20个字"
+            rules={[{ required: true, message: '默认商家联系人，字母和汉字组成，长度<20个字' }]}
+          >
+            <Input placeholder="请输入" />
+          </FormItem>
+        </Col>
+      </Row>
+      <Row>
+        <Col span="12">
+          <FormItem
+            name="email"
+            label="电子邮箱"
+            extra="不能重复，必填，长度<30个字"
+            rules={[{ required: true, message: '不能重复，必填，长度<30个字' }]}
+          >
+            <Input placeholder="请输入" />
+          </FormItem>
+        </Col>
+        <Col span="12">
+          <FormItem
+            name="phoneNum"
+            label="手机号码"
+            extra="不能为空，由3-16位英文字符、数字组成"
+            rules={[{ required: true, message: '不能为空，由3-16位英文字符、数字组成' }]}
+          >
+            <Input placeholder="请输入" />
+          </FormItem>
+        </Col>
+      </Row>
+        <Row>
+          <Col span="12">
+            <FormItem
+              name="password"
+              label="登录密码"
+              extra="不能为空，由3-16位英文字符、数字组成"
+              rules={[{ required: true, message: '不能为空，由3-16位英文字符、数字组成' }]}
+            >
+              <Input placeholder="请输入" />
+            </FormItem>
+          </Col>
+          <Col span="12">
+            <FormItem
+              name="accountStatus"
+              label="是否冻结"
+              rules={[{ required: true, message: '请选择账户状态' }]}
+            >
+              <Radio.Group>
+                <Radio value={1}>正常</Radio>
+                <Radio value={0}>冻结</Radio>
+              </Radio.Group>
+            </FormItem>
+          </Col>
+        </Row>
       </>
     );
   };
@@ -158,12 +338,12 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
     if (currentStep === 2) {
       return (
         <>
-          <Button style={{ float: 'left' }} onClick={backward}>
+          {/* <Button style={{ float: 'left' }} onClick={backward}>
             上一步
           </Button>
-          <Button onClick={() => handleUpdateModalVisible(false, values)}>取消</Button>
-          <Button type="primary" onClick={() => handleNext()}>
-            完成
+          <Button onClick={() => handleUpdateModalVisible(false, values)}>取消</Button> */}
+          <Button type="primary" onClick={() => handleUpdateModalVisible(false, values)}>
+            关闭
           </Button>
         </>
       );
@@ -180,22 +360,25 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
 
   return (
     <Modal
-      width={640}
-      bodyStyle={{ padding: '32px 40px 48px' }}
+      width={866}
+      className="create-account-modal"
+      bodyStyle={{ padding: '32px 32px 50px' }}
       destroyOnClose
-      title="规则配置"
+      title="新建租户"
       visible={updateModalVisible}
       footer={renderFooter()}
       onCancel={() => handleUpdateModalVisible()}
     >
       <Steps style={{ marginBottom: 28 }} size="small" current={currentStep}>
-        <Step title="基本信息" />
-        <Step title="配置规则属性" />
-        <Step title="设定调度周期" />
+        <Step title="基本账户信息" />
+        <Step title="选择账户权限" />
+        <Step title="完成" />
       </Steps>
       <Form
+        labelAlign="left"
         {...formLayout}
         form={form}
+        className="create-account-form"
         initialValues={{
           target: formVals.target,
           template: formVals.template,
@@ -203,6 +386,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
           frequency: formVals.frequency,
           name: formVals.name,
           desc: formVals.desc,
+          tenant: formVals.tenant
         }}
       >
         {renderContent()}

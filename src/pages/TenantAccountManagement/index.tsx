@@ -1,31 +1,35 @@
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, Dropdown, Menu, message } from 'antd';
+import { Button, Divider, Dropdown, Menu, message, Form, Input } from 'antd';
 import React, { useState, useRef } from 'react';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 
-import CreateForm from './components/CreateForm';
+// import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
+import ReactPasswordForm from './components/ResetPasswordForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, addRule, removeRule } from './service';
+import { queryRule, updateRule, removeRule } from './service';
+
+// 引入样式
+import "../../assets/css/common/common.css";
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: TableListItem) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addRule({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
+// const handleAdd = async (fields: TableListItem) => {
+//   const hide = message.loading('正在添加');
+//   try {
+//     await addRule({ ...fields });
+//     hide();
+//     message.success('添加成功');
+//     return true;
+//   } catch (error) {
+//     hide();
+//     message.error('添加失败请重试！');
+//     return false;
+//   }
+// };
 
 /**
  * 更新节点
@@ -71,8 +75,15 @@ const handleRemove = async (selectedRows: TableListItem[]) => {
   }
 };
 
+// label 和 input 的布局
+const formLayout = {
+  labelCol: { span: 5 },
+  wrapperCol: { span: 17 }
+};
+
 const TableList: React.FC<{}> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
+  const [resetPassword, handleResetModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
   const actionRef = useRef<ActionType>();
@@ -125,10 +136,8 @@ const TableList: React.FC<{}> = () => {
           </a>
           <Divider type="vertical" />
           <a
-            href=""
             onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              handleResetModalVisible(true)
             }}
           >
             重置密码
@@ -144,6 +153,7 @@ const TableList: React.FC<{}> = () => {
         headerTitle="查询表格"
         actionRef={actionRef}
         rowKey="key"
+        rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
             <PlusOutlined /> 新建
@@ -183,23 +193,53 @@ const TableList: React.FC<{}> = () => {
         columns={columns}
         rowSelection={{}}
       />
-      <CreateForm onCancel={() => handleModalVisible(false)} modalVisible={createModalVisible}>
-        <ProTable<TableListItem, TableListItem>
+      <ReactPasswordForm
+        modalVisible={resetPassword}
+        onCancel={() => handleResetModalVisible(false)}
+      >
+        <Form
+        labelAlign="left"
+        {...formLayout}
+        >
+          <Form.Item 
+            label="用户名" 
+            name="username" 
+            rules={[{ required: true, message: '唯一标识，由英文字符、数字组成，长度<10个字符' }]}
+            extra="唯一标识，由英文字符、数字组成，长度<10个字符">
+            <Input  />
+          </Form.Item>
+          <Form.Item 
+            label="新密码" 
+            name="newPassword" 
+            rules={[{ required: true, message: '必填，长度<30个字' }]}
+            extra="必填，长度<30个字">
+            <Input.Password visibilityToggle={false} />
+          </Form.Item>
+          <Form.Item 
+            label="确认密码"
+            name="samePassword" 
+            rules={[{ required: true, message: '再次输入密码，和新密码保持一致' }]}
+            extra="再次输入密码，和新密码保持一致"
+            >
+            <Input.Password visibilityToggle={false} />
+          </Form.Item>
+        </Form>
+      </ReactPasswordForm>
+      <UpdateForm
           onSubmit={async (value) => {
-            const success = await handleAdd(value);
+            const success = await handleUpdate(value);
             if (success) {
-              handleModalVisible(false);
+              handleUpdateModalVisible(false);
+              setStepFormValues({});
               if (actionRef.current) {
                 actionRef.current.reload();
               }
             }
           }}
-          rowKey="key"
-          type="form"
-          columns={columns}
-          rowSelection={{}}
+          onCancel={() => handleModalVisible(false)}
+          updateModalVisible={createModalVisible}
+          values={stepFormValues}
         />
-      </CreateForm>
       {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
           onSubmit={async (value) => {

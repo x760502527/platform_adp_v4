@@ -2,12 +2,13 @@ import React, { useState, useRef } from 'react';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
-import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select } from 'antd';
+import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select, Table } from 'antd';
 // 引入相关组件
 import CreateForm from './components/CreateForm';
 import Tree from './components/Tree';
 // 引入CSS
 import "antd/dist/antd.css";
+import "../../assets/css/common/common.css";
 // 引入接口
 import { TableListItem } from './data.d';
 // 引入封装网络请求
@@ -99,6 +100,7 @@ const TableList: React.FC<{}> = () => {
         rowKey="key"
         columns={columns}
         rowSelection={{}}
+        rowClassName={(record, index) => {console.log(index); return index%2=== 1?"rowWhite":"rowDeep"}}
         request={(params) => getRule({ ...params})}
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
