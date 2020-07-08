@@ -1,19 +1,25 @@
+// 引入依赖库
 import React, { useState, useRef } from 'react';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
-import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select, Table } from 'antd';
-// 引入相关组件
+import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select, message, Popconfirm } from 'antd';
+
+// 引入相关子组件
 import CreateForm from './components/CreateForm';
 import Tree from './components/Tree';
+
 // 引入CSS
 import "antd/dist/antd.css";
 import "../../assets/css/IndustryVersionManagement/index.css"
 import "../../assets/css/common/common.css";
+
 // 引入接口
 import { TableListItem } from './data.d';
+
 // 引入封装网络请求获取所有项
-import { getRule, addRule } from './service'
+import { getRule, addRule, removeRule } from './service';
+
 // 从Select组件中拿到Option
 const { Option } = Select;
 
@@ -22,8 +28,46 @@ const TableList: React.FC<{}> = () => {
   // 定义创建/更新表格的hook
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  const [showTenantSearch,hideTenantSearch] = useState<boolean>(true);
-  const [industryVersionName, changeName] = useState<string>('')
+  // 根据角色不同显示不同搜索框的hook
+  const [showTenantSearch, hideTenantSearch] = useState<boolean>(true);
+  const [showIndustyName, hideIndustryName] = useState<boolean>(true)
+  // 新建的行业版本名称的hook
+  const [industryVersionName, changeName] = useState<string>('');
+
+  // 查询框中角色属性值的hook
+  const [roleProps, changeRoleProps] = useState<number>(-1);
+
+  // 分页器的状态hook
+  const [total, handlerTotal] = useState<number>(0);
+
+  // 创建行业版本的方法
+  const onSubmit = (val:string) => {
+    if(val == '') {
+      return
+    }
+    let msg = addRule({industyVersionName: val});
+    msg.then(res => {
+      if(res.success) {
+        actionRef.current?.reloadAndRest();
+        handleModalVisible(false);
+        changeName('');
+      }
+    }).catch(err => {
+      message.error('行业版本创建失败，请刷新页面后重试');
+    })
+  }
+
+  // 删除行业版本的方法
+  const confirm = async (record: TableListItem) => {
+    let msg = removeRule(record.key);
+    msg.then((res) => {
+      if(res.success) {
+        actionRef.current?.reloadAndRest();
+      }
+    }).catch(err => {
+      message.error('行业版本删除失败，请刷新页面后重试');
+    })
+  }
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
@@ -35,15 +79,29 @@ const TableList: React.FC<{}> = () => {
     {
       title: '角色属性',
       dataIndex: 'roleProps',
-      renderFormItem: () => {
+      renderFormItem: (item, props) => {
         return (
           <Select 
           placeholder="请选择角色" 
-          onChange={val => { hideTenantSearch(val == 'version' ? true : false)}}>
-            <Option value="version">行业版本</Option>
-            <Option value="role">用户角色</Option>
+          onChange={
+            (val:number) => { 
+              changeRoleProps(val);
+              if(val == 0) {
+                hideIndustryName(false)
+                hideTenantSearch(true)
+              } else if(val == 1) {
+                hideIndustryName(false)
+                hideTenantSearch(false)
+              } else {
+                hideIndustryName(true)
+                hideTenantSearch(true)
+              }
+            }
+          }>
+            <Option value={0}>行业版本</Option>
+            <Option value={1}>用户角色</Option>
           </Select>
-       )
+        )
       }
     },
     {
@@ -59,9 +117,7 @@ const TableList: React.FC<{}> = () => {
     {
       title: '行业版本名称',
       dataIndex: 'industyVersionName',
-      formItemProps: {
-        placeholder:"请输入行业版本名称"
-      }
+      hideInSearch: showIndustyName
     },
     {
       title: '备注',
@@ -83,27 +139,21 @@ const TableList: React.FC<{}> = () => {
             修改
           </a>
           <Divider type="vertical" />
-          <a 
-            onClick={()=>{}}
-            style={{color:'#FF4B40'}} 
-          >删除</a>
+          <Popconfirm
+            title="你确定要删除此条行业版本信息吗?"
+            onConfirm={() => confirm(record)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <a
+              style={{color:'#FF4B40'}} 
+            >删除</a>
+          </Popconfirm>
         </>
       ),
     },
   ];
-  const defaultValue:string = '';
-  // const onFinish = (value:object[]) => {
-  //   console.log(value);
-  // }
-  const onSubmit = async (val:string) => {
-    let msg = addRule({industyVersionName: val});
-    msg.then(res => {
-      if(res.success) {
-        actionRef.current.reloadAndRest();
-        handleModalVisible(false);
-      }
-    })
-  }
+
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
@@ -111,10 +161,21 @@ const TableList: React.FC<{}> = () => {
         actionRef={actionRef}
         defaultData={[]}
         rowKey="key"
+        pagination={{defaultCurrent:1,total}}
         columns={columns}
         rowSelection={{}}
         rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
-        request={(params) => getRule({ ...params})}
+        request={(params, sorter, filter) => {
+          // 将角色属性添加到请求参数中
+          let tableParams = Object.assign(params);
+          tableParams.roleflag = roleProps;
+          let data = getRule({...tableParams});
+          data.then(res => {
+            // 获取返回的total条数并渲染
+            handlerTotal(res.total);
+          })
+          return getRule({...tableParams});
+        }}
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
             <PlusOutlined /> 新建
@@ -167,7 +228,7 @@ const TableList: React.FC<{}> = () => {
           <Row justify={"end"}>
             <Col span="2" className="footer-button">
               <Form.Item name="button">
-                <Button onClick={() => {handleModalVisible(false);console.log(defaultValue)}}>取消</Button> 
+                <Button onClick={() => {handleModalVisible(false)}}>取消</Button> 
               </Form.Item>
             </Col>
             <Col span="2" className="footer-button">

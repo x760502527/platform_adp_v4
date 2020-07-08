@@ -4,19 +4,10 @@ import {Modal} from 'antd';
 interface CreateFormProps {
   modalVisible: boolean;
   onCancel: () => void;
-  
 }
 
 const CreateForm: React.FC<CreateFormProps> = (props) => {
-  // console.log(props)
   const { modalVisible, onCancel} = props;
-  // console.log(children)
-  // const [ closeModel, isClose ] = useState(false)
-  // const onSubmit = function():void {
-  //   console.log(closeModel)
-  //   isClose(true)
-  //   onCancel()
-  // }
   return (
     <Modal
       width={984}

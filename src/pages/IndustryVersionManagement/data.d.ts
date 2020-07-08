@@ -4,10 +4,7 @@ interface RequestData {
   success: boolean;
   total: number;
 }
-// // 请求添加数据的接口
-// interface requestAddData {
 
-// }
 // 调用后台接口的前台接口
 interface ApiListItem {
   id: number,
@@ -43,6 +40,9 @@ export interface TableListParams {
   pageNum?: number;  
   pageSize?: number;
   current?: number;
+  roleflag?: number;
+  industyVersionName?:string;
+  roleProps?: number;
   prePage?:number;
   // filter?: { [key: string]: any[] };
   // sorter?: { [key: string]: any };

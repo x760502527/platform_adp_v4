@@ -1,32 +1,30 @@
 import request from 'umi-request';
 import { TableListParams, TableListItem, ApiListItem, RequestData} from './data.d';
 
-// let commonParams:TableListParams|undefined;
 // 添加行业版本
 export async function addRule(params: TableListItem) {
-  // console.log(params)
   const msg:any = await request('/api/entityrole/updateEntityrole', {
     method: 'POST',
     params: {
       rolename: params.industyVersionName
     }
   });
-  // if(commonParams) {
-  //   console.log('刷新')
-  //   getRule(commonParams)
-  // }
   return msg;
 }
+
 // 获取行业版本
 export async function getRule(params?: TableListParams) {
-  // commonParams = params;
+  console.log(params)
   const mag:any = await request<RequestData>('/api/entityrole/listEntityroles', {
     method: 'POST',
     params: {
       pageNum: params?.current,
-      pageSize: params?.pageSize
+      pageSize: params?.pageSize,
+      roleflag: params?.roleflag,
+      rolename:params?.industyVersionName
     },
   });
+
   let sourceData:TableListItem[] = [];
   const list = mag.data.data.list;
   list.forEach((item:ApiListItem) => {
@@ -37,28 +35,31 @@ export async function getRule(params?: TableListParams) {
     listItem.roleProps = item.roleflag;
     sourceData.push(listItem);
   })
+
   return {
     data: sourceData,
-    total: 15,
+    total: mag.data.data.total,
     success: true
   }
 }
+
 // 查询行业版本
 export async function queryRule(params?: TableListParams) {
   return request('/api/rule', {
     params,
   });
 }
+
 // 删除行业版本
-export async function removeRule(params: { key: number[] }) {
-  return request('/api/rule', {
+export async function removeRule(id: number) {
+  return request('/api/entityrole/delEntityrole', {
     method: 'POST',
-    data: {
-      ...params,
-      method: 'delete',
+    params: {
+      ids: id
     },
   });
 }
+
 // 编辑行业版本
 export async function updateRule(params: TableListParams) {
   return request('/api/rule', {
