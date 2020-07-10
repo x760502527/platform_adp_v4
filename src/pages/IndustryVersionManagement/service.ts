@@ -6,16 +6,25 @@ export async function addRule(params: TableListItem) {
   const msg:any = await request('/api/entityrole/updateEntityrole', {
     method: 'POST',
     params: {
-      rolename: params.industyVersionName
+      rolename: params.industyVersionName,
+      memo: params.note
     }
   });
   return msg;
 }
 
+// 查询菜单树
+export async function queryMenu() {
+  const res:any = await request('/api/menu/queryEntityrolemenuByEntityrole', {
+    method: 'POST'
+  });
+  return res;
+}
+
 // 获取行业版本
 export async function getRule(params?: TableListParams) {
-  console.log(params)
-  const mag:any = await request<RequestData>('/api/entityrole/listEntityroles', {
+  let msg:any;
+  await request<RequestData>('/api/entityrole/listEntityroles', {
     method: 'POST',
     params: {
       pageNum: params?.current,
@@ -23,35 +32,36 @@ export async function getRule(params?: TableListParams) {
       roleflag: params?.roleflag,
       rolename:params?.industyVersionName
     },
+  }).then(res => {
+    msg = res;
+  }).catch(err => {
+    console.log(err)
   });
-
+  // 获取原始数据并处理
   let sourceData:TableListItem[] = [];
-  const list = mag.data.data.list;
+  let list = msg.data.list;
   list.forEach((item:ApiListItem) => {
-    let listItem:TableListItem = {key:1, industyTableid: 1, industyVersionName: '', roleProps: 1};
+    let listItem:TableListItem = {key:1, industyTableid: 1, industyVersionName: '', roleProps: ''};
     listItem.key = item.id;
     listItem.industyTableid = item.id;
     listItem.industyVersionName = item.rolename;
-    listItem.roleProps = item.roleflag;
+    listItem.note = item.memo
+    if(item.roleflag == 0) {
+      listItem.roleProps = '行业版本'
+    } else {
+      listItem.roleProps = '用户角色'
+    }
     sourceData.push(listItem);
   })
-
   return {
     data: sourceData,
-    total: mag.data.data.total,
+    total: msg.data.total,
     success: true
   }
 }
 
-// 查询行业版本
-export async function queryRule(params?: TableListParams) {
-  return request('/api/rule', {
-    params,
-  });
-}
-
 // 删除行业版本
-export async function removeRule(id: number) {
+export async function removeRule(id?: number) {
   return request('/api/entityrole/delEntityrole', {
     method: 'POST',
     params: {
@@ -61,12 +71,13 @@ export async function removeRule(id: number) {
 }
 
 // 编辑行业版本
-export async function updateRule(params: TableListParams) {
-  return request('/api/rule', {
+export async function updateRule(params: TableListItem) {
+  return request('/api/entityrole/updateEntityrole', {
     method: 'POST',
-    data: {
-      ...params,
-      method: 'update',
+    params: {
+      id: params.key,
+      memo: params.note,
+      rolename: params.industyVersionName
     },
   });
 }

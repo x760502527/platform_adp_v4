@@ -7,6 +7,7 @@ import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select, message,
 
 // 引入相关子组件
 import CreateForm from './components/CreateForm';
+import UpdateForm from './components/UpdateForm'
 import Tree from './components/Tree';
 
 // 引入CSS
@@ -14,11 +15,11 @@ import "antd/dist/antd.css";
 import "../../assets/css/IndustryVersionManagement/index.css"
 import "../../assets/css/common/common.css";
 
-// 引入接口
-import { TableListItem } from './data.d';
+// 引入相关接口
+import { TableListItem, UpdateTableParams } from './data.d';
 
 // 引入封装网络请求获取所有项
-import { getRule, addRule, removeRule } from './service';
+import { getRule, addRule, removeRule, updateRule } from './service';
 
 // 从Select组件中拿到Option
 const { Option } = Select;
@@ -30,35 +31,57 @@ const TableList: React.FC<{}> = () => {
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   // 根据角色不同显示不同搜索框的hook
   const [showTenantSearch, hideTenantSearch] = useState<boolean>(true);
-  const [showIndustyName, hideIndustryName] = useState<boolean>(true)
+  const [showIndustyName, hideIndustryName] = useState<boolean>(false)
   // 新建的行业版本名称的hook
   const [industryVersionName, changeName] = useState<string>('');
-
+  // 新建的行业版本备注的hook
+  const [note, changeNote] = useState<string>('');
   // 查询框中角色属性值的hook
-  const [roleProps, changeRoleProps] = useState<number>(-1);
-
+  const [roleProps, changeRoleProps] = useState<number>();
   // 分页器的状态hook
   const [total, handlerTotal] = useState<number>(0);
+  // 每一条数据recordItem的hook
+  const [record, changeRecord] = useState<UpdateTableParams>({});
 
   // 创建行业版本的方法
-  const onSubmit = (val:string) => {
-    if(val == '') {
+  const onSubmit = (industyVersionName:string, note: string) => {
+    if(industyVersionName == '' || note == '') {
       return
     }
-    let msg = addRule({industyVersionName: val});
+    let msg = addRule({industyVersionName, note});
     msg.then(res => {
       if(res.success) {
         actionRef.current?.reloadAndRest();
         handleModalVisible(false);
         changeName('');
+        changeNote('');
       }
     }).catch(err => {
       message.error('行业版本创建失败，请刷新页面后重试');
     })
   }
 
+  // 修改行业版本的方法
+  const onSubmitUpdate = (record:TableListItem) => {
+    const params = {
+      key: record.key,
+      note: record.note,
+      industyVersionName: record.industyVersionName
+    }
+    let msg = updateRule(params);
+    msg.then(res => {
+      if(res.success) {
+        message.success('修改成功')
+        handleUpdateModalVisible(false); 
+        actionRef.current?.reloadAndRest();
+      }
+    }).catch(err => {
+      message.error('行业版本更新失败，请刷新页面后重试');
+    })
+  }
+
   // 删除行业版本的方法
-  const confirm = async (record: TableListItem) => {
+  const onSubmitDelete = async (record: TableListItem) => {
     let msg = removeRule(record.key);
     msg.then((res) => {
       if(res.success) {
@@ -68,7 +91,9 @@ const TableList: React.FC<{}> = () => {
       message.error('行业版本删除失败，请刷新页面后重试');
     })
   }
+
   const actionRef = useRef<ActionType>();
+  // 初始化每一列的渲染
   const columns: ProColumns<TableListItem>[] = [
     {
       title: '序号',
@@ -82,19 +107,16 @@ const TableList: React.FC<{}> = () => {
       renderFormItem: (item, props) => {
         return (
           <Select 
-          placeholder="请选择角色" 
-          onChange={
+          placeholder="请选择角色"
+          onChange={ 
             (val:number) => { 
               changeRoleProps(val);
               if(val == 0) {
                 hideIndustryName(false)
                 hideTenantSearch(true)
-              } else if(val == 1) {
+              } else {
                 hideIndustryName(false)
                 hideTenantSearch(false)
-              } else {
-                hideIndustryName(true)
-                hideTenantSearch(true)
               }
             }
           }>
@@ -134,6 +156,7 @@ const TableList: React.FC<{}> = () => {
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
+              changeRecord(record)
             }}
           >
             修改
@@ -141,7 +164,7 @@ const TableList: React.FC<{}> = () => {
           <Divider type="vertical" />
           <Popconfirm
             title="你确定要删除此条行业版本信息吗?"
-            onConfirm={() => confirm(record)}
+            onConfirm={() => onSubmitDelete(record)}
             okText="确定"
             cancelText="取消"
           >
@@ -153,7 +176,11 @@ const TableList: React.FC<{}> = () => {
       ),
     },
   ];
-
+  // 定义新增和修改行业版本页面的表单input布局
+  const formLayout = {
+    labelCol: { span: 8 },
+    wrapperCol: { span: 16 },
+  }
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
@@ -215,9 +242,29 @@ const TableList: React.FC<{}> = () => {
         className="createForm"
         >
           <Row>
-            <Col span="12">
-              <Form.Item name="note" label="行业版本名称" rules={[{ required: true, message: '请输入内容!'}]}>
-                <Input value={industryVersionName} onChange={ val => changeName(val.target.value) } />  
+            <Col span="10">
+              <Form.Item 
+                name="industryVersionName" 
+                label="行业版本名称" 
+                rules={[{ required: true, message: '请输入内容!'}]}
+                {...formLayout}
+                >
+                <Input 
+                  value={industryVersionName} 
+                  onChange={ val => changeName(val.target.value) }
+                />  
+              </Form.Item>
+            </Col>
+            <Col span="10" offset="2">
+              <Form.Item 
+              name="note" 
+              label="备注" 
+              rules={[{ required: true, message: '请输入内容!'}]}
+              {...formLayout}>
+                <Input 
+                  value={note} 
+                  onChange={ val => changeNote(val.target.value) } 
+                />  
               </Form.Item>
             </Col>
           </Row>
@@ -233,31 +280,72 @@ const TableList: React.FC<{}> = () => {
             </Col>
             <Col span="2" className="footer-button">
               <Form.Item name="button">
-                <Button htmlType="submit" type="primary" onClick={() => onSubmit(industryVersionName)} >提交</Button> 
+                <Button 
+                  htmlType="submit" 
+                  type="primary" 
+                  onClick={() => onSubmit(industryVersionName, note)} 
+                  >
+                  提交
+                </Button> 
               </Form.Item>
             </Col>
           </Row>
         </Form>
       </CreateForm>
-      <CreateForm onCancel={() => handleUpdateModalVisible(false)} modalVisible={updateModalVisible}>
-        <Form name="control-ref">
+      <UpdateForm 
+        onCancel={() => handleUpdateModalVisible(false)} 
+        modalVisible={updateModalVisible}
+        >
+        <Form name="control-ref" className="updateForm">
           <Row>
             <Col span="10">
-              <Form.Item name="note" label="角色编码" rules={[{ required: true }]}>
-                <Input />
+              <Form.Item 
+                {...formLayout}
+                name="industryVersionName" 
+                label="行业版本名称" 
+                rules={[{ required: true }]}
+                initialValue={record.industyVersionName}
+                >
+                <Input 
+                  onChange={(e) => {
+                  record.industyVersionName = e.target.value;
+                }} />
               </Form.Item>
              </Col>
             <Col span="10" offset="2">
-              <Form.Item name="note" label="角色名称" rules={[{ required: true }]}>
-                <Input />
+              <Form.Item 
+                {...formLayout}
+                name="note" 
+                label="备注" 
+                rules={[{ required: true }]}
+                initialValue={record.note}
+                >
+                <Input 
+                  onChange={(e) => {
+                  record.note = e.target.value
+                  }}
+                />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item>
             <Tree />
           </Form.Item>
+          <Divider />
+          <Row justify={"end"}>
+            <Col span="2" className="footer-button">
+              <Form.Item name="button">
+                <Button onClick={() => {handleUpdateModalVisible(false)}}>取消</Button> 
+              </Form.Item>
+            </Col>
+            <Col span="2" className="footer-button">
+              <Form.Item name="button">
+                <Button htmlType="submit" type="primary" onClick={() => onSubmitUpdate(record)} >提交</Button> 
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
-      </CreateForm>
+      </UpdateForm>
     </PageHeaderWrapper>
   );
 };

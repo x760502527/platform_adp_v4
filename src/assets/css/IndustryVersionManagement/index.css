@@ -1,3 +1,7 @@
 .createForm .footer-button {
   height: 32px;
 }
+
+.updateForm .footer-button {
+  height: 32px;
+}

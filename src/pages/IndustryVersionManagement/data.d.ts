@@ -9,13 +9,14 @@ interface RequestData {
 interface ApiListItem {
   id: number,
   rolename: string,
-  roleflag: number
+  roleflag: number,
+  memo: string,
 }
 // 表格中列表项接口
 export interface TableListItem {
   key?: number;
   industyTableid?:number;
-  roleProps?:number;
+  roleProps?:string;
   tenant?:string;
   industyVersionName?:string;
   note?:string;
@@ -44,6 +45,10 @@ export interface TableListParams {
   industyVersionName?:string;
   roleProps?: number;
   prePage?:number;
-  // filter?: { [key: string]: any[] };
-  // sorter?: { [key: string]: any };
+}
+// 更新表格所需参数
+export interface UpdateTableParams {
+  key?: number;
+  industyVersionName?: string;
+  note?: string;
 }
