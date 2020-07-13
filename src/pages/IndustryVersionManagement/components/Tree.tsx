@@ -1,109 +1,73 @@
 import React, { useState } from 'react';
 import { Table, Checkbox, Space } from 'antd';
 
-
-const Tree: React.FC<{}> = (props) => {
-  // 定义操作权限选择的hook
-  const [checkedStatus, changeChecked] = useState<{}[]>([]);
-  // 源数据
-  const originalData = [
-    {
-      name: '一级菜单',
-      key:'1',
-      title:'一级菜单',
-      operation:[{
-        name:'新增',
-        code:'add'
-      },{
-        name:"删除",
-        code:'delete'
-      }],
-      children:[
-        {
-          key:'3',
-          title:'二级菜单',
-          operation:[{
-              name:'新增',
-              code:'add'
-          },{
-              name:"删除",
-              code:'delete'
-          }],
-        },
-        {
-          key:'5',
-          title:'二级菜单',
-          operation:[{
-              name:'新增',
-              code:'add'
-          },{
-              name:"删除",
-              code:'delete'
-          }],
-        }
-      ]
-    },
-    {
-      name: "行业版本管理",
-      key:'2',
-      title:'行业版本管理',
-      operation:[{
-        name:'新增',
-        code:'add'
-      },{
-        name:"删除",
-        code:'delete'
-      }],
-      children:[
-        {
-          key:'4',
-          title:'用户管理',
-          operation:[{
-              name:'新增',
-              code:'add'
-          },{
-              name:"删除",
-              code:'delete'
-          }],
-        }
-      ]
-    }
-  ]
-  // 遍历数据将状态存入hook
-  // const 
-  // originalData.forEach(item => {
-  //   if(item.children) {
-
-  //   }
-  // })
-  // 当前选中的行
+const Tree: React.FC<{}> = (props:any) => {
+  // 表格源数据
+  const [sourceData, changeData] = useState<object[]>(props.data);
+  // 选中的菜单
+  const [selectedRow, changeSelectedRow] = useState<object[]>([]);
+  // 选中的菜单key
+  const [selectedRole, setRole] = useState<string[]>([]);
   const rowSelection = {
     onChange: (selectedRowKeys: any, selectedRows: any) => {
-      // console.log(selectedRowKeys)
-      // console.log(selectedRows)
+      props.getRowMenucode(selectedRowKeys.join(','));
+      changeSelectedRow(selectedRows);
     },
+    checkStrictly: false
   };
-  // 每列的配置
+  // 处理数据：
+  // const handleData = (data:any) => {
+  //   let roleMenucode:string[] = [];
+  //   // console.log(data);
+  //   data.forEach(item => {
+  //     if(item.children.length !== 0) {
+  //       handleData(item.children);
+  //     }
+  //     item.operation.forEach(item => {
+  //       roleMenucode.push(item.isClick === '1' ? item.menucode : '')
+  //     })
+  //   })
+  //   return roleMenucode;
+  // }
   const columns = [
     {
       title: '菜单选项',
-      dataIndex: 'title',
+      dataIndex: 'menuname',
       valueType: 'text',
+      key: 'menuname'
     },
     {
       title: '操作权限',
       dataIndex: 'operation',
+      key: 'operation',
       valueType: 'text',
-      render: (operations: any[]) => (
-        
+      render: (text: any[], record:any) => (
         <Space>
           {
-            operations.map((v)=>{
-              // console.log(operations)
+            text.map((item)=>{
               return (
-                <span key={v.name}>
-                  <Checkbox>
-                    {checkedStatus.toString()}{v.name}
+                <span key={item.menucode}>
+                  <Checkbox 
+                    disabled={selectedRow.indexOf(record) !== -1 ? false : true }
+                    defaultChecked={item.isClick === '0'? false : true} 
+                    onChange={(event) => {
+                      // console.log(sourceData)
+                      item.isClick = (event.target.checked === false ? '0' : '1');
+                      if(event.target.checked) {
+                        if(!selectedRole.includes(item.menucode)) {
+                          setRole([...selectedRole, item.menucode]);
+                        } else {
+                          setRole(selectedRole.splice(selectedRole.indexOf(item.menucode), 1));
+                          setRole([...selectedRole, item.menucode]);
+                        }
+                      } else {
+                        setRole(selectedRole.splice(selectedRole.indexOf(item.menucode), 1));
+                      }
+                      console.log(selectedRole);
+                    }}
+                  >
+                    {selectedRole}
+                    {item.menuname}
                   </Checkbox>
                 </span>
               )
@@ -113,13 +77,11 @@ const Tree: React.FC<{}> = (props) => {
       )
     },
   ];
-
   return (
     <>
     <Table
-      rowSelection={rowSelection}
-      dataSource={originalData}
-
+      rowSelection={{...rowSelection}}
+      dataSource={sourceData}
       columns={columns} />
     </>
   );

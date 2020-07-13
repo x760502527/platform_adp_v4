@@ -15,7 +15,7 @@ export async function addRule(params: TableListItem) {
 
 // 查询菜单树
 export async function queryMenu() {
-  const res:any = await request('/api/menu/queryEntityrolemenuByEntityrole', {
+  const res:any = await request('/api/entityrole/queryEntityrolemenuByEntityrole', {
     method: 'POST'
   });
   return res;

@@ -1,5 +1,5 @@
 // 引入依赖库
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
@@ -19,7 +19,7 @@ import "../../assets/css/common/common.css";
 import { TableListItem, UpdateTableParams } from './data.d';
 
 // 引入封装网络请求获取所有项
-import { getRule, addRule, removeRule, updateRule } from './service';
+import { getRule, addRule, removeRule, updateRule, queryMenu } from './service';
 
 // 从Select组件中拿到Option
 const { Option } = Select;
@@ -42,9 +42,37 @@ const TableList: React.FC<{}> = () => {
   const [total, handlerTotal] = useState<number>(0);
   // 每一条数据recordItem的hook
   const [record, changeRecord] = useState<UpdateTableParams>({});
+  // 新建model中的表格数据
+  const [sourceData, changeSourceData] = useState<object[]>([]);
+  // 选中的每行的menucode
+  const [rowMenucode, changeMenucode] = useState<string>('');
+  const getRowMenucode = (code:any) => {
+    changeMenucode(code);
+  }
+  // 给每个菜单添加key
+  const handleData = (data:any) => {
+    data.forEach(item => {
+      if(item.children.length !== 0) {
+        handleData(item.children)
+      }
+      item.key = item.menucode;
+    })
+    return data;
+  }
+  // 获取菜单树的方法
+  useEffect(() => {
+    queryMenu().then(res => {
+      if(res.success) {
+        changeSourceData(handleData(res.data))
+      }
+    }).catch(err => {
+      message.error('菜单获取失败，请刷新页面后重试');
+    });
+  }, []);
 
   // 创建行业版本的方法
   const onSubmit = (industyVersionName:string, note: string) => {
+    console.log(rowMenucode);
     if(industyVersionName == '' || note == '') {
       return
     }
@@ -269,7 +297,7 @@ const TableList: React.FC<{}> = () => {
             </Col>
           </Row>
           <Form.Item>
-            <Tree />
+            <Tree getRowMenucode={getRowMenucode} data={sourceData}/>
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
