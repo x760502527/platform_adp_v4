@@ -1,6 +1,18 @@
 import request from 'umi-request';
 import { TableListParams, TableListItem, ApiListItem, RequestData} from './data.d';
 
+// 新建菜单树
+export async function createMenu(params: TableListItem) {
+  const msg:any = await request('/api/entityrole/updateEntityrole', {
+    method: 'POST',
+    params: {
+      rolename: params.industyVersionName,
+      memo: params.note
+    }
+  });
+  return msg;
+}
+
 // 添加行业版本
 export async function addRule(params: TableListItem) {
   const msg:any = await request('/api/entityrole/updateEntityrole', {

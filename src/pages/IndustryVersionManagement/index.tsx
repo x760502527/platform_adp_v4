@@ -20,7 +20,6 @@ import { TableListItem, UpdateTableParams } from './data.d';
 
 // 引入封装网络请求获取所有项
 import { getRule, addRule, removeRule, updateRule, queryMenu } from './service';
-
 // 从Select组件中拿到Option
 const { Option } = Select;
 
@@ -44,10 +43,16 @@ const TableList: React.FC<{}> = () => {
   const [record, changeRecord] = useState<UpdateTableParams>({});
   // 新建model中的表格数据
   const [sourceData, changeSourceData] = useState<object[]>([]);
+  
   // 选中的每行的menucode
-  const [rowMenucode, changeMenucode] = useState<string>('');
+  const [menucode, setMenucode] = useState<string>('');
+  const [rowMenucode, setRowMenucode] = useState<string[]>([]);
+  const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
   const getRowMenucode = (code:any) => {
-    changeMenucode(code);
+    setRowMenucode(code);
+  }
+  const getRoleMenucode = (code:any) => {
+    setRoleMenucode(code);
   }
   // 给每个菜单添加key
   const handleData = (data:any) => {
@@ -72,12 +77,14 @@ const TableList: React.FC<{}> = () => {
 
   // 创建行业版本的方法
   const onSubmit = (industyVersionName:string, note: string) => {
-    console.log(rowMenucode);
+    setMenucode(rowMenucode.join(',') + ',' + roleMenucode.join(','))
     if(industyVersionName == '' || note == '') {
       return
     }
+    // let rolemsg = 
     let msg = addRule({industyVersionName, note});
     msg.then(res => {
+      console.log(res)
       if(res.success) {
         actionRef.current?.reloadAndRest();
         handleModalVisible(false);
@@ -297,7 +304,8 @@ const TableList: React.FC<{}> = () => {
             </Col>
           </Row>
           <Form.Item>
-            <Tree getRowMenucode={getRowMenucode} data={sourceData}/>
+            {roleMenucode}{rowMenucode}
+            <Tree getRowMenucode={getRowMenucode} getRoleMenucode={getRoleMenucode} data={sourceData}/>
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
@@ -357,7 +365,7 @@ const TableList: React.FC<{}> = () => {
             </Col>
           </Row>
           <Form.Item>
-            <Tree />
+            <Tree getRowMenucode={getRowMenucode} getRoleMenucode={getRoleMenucode} data={sourceData}/>
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
