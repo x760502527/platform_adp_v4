@@ -43,9 +43,7 @@ const TableList: React.FC<{}> = () => {
   const [record, changeRecord] = useState<UpdateTableParams>({});
   // 新建model中的表格数据
   const [sourceData, changeSourceData] = useState<object[]>([]);
-  
   // 选中的每行的menucode
-  const [menucode, setMenucode] = useState<string>('');
   const [rowMenucode, setRowMenucode] = useState<string[]>([]);
   const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
   const getRowMenucode = (code:any) => {
@@ -77,14 +75,12 @@ const TableList: React.FC<{}> = () => {
 
   // 创建行业版本的方法
   const onSubmit = (industyVersionName:string, note: string) => {
-    setMenucode(rowMenucode.join(',') + ',' + roleMenucode.join(','))
+    let menucode = rowMenucode.join(',') + ',' + roleMenucode.join(',');
     if(industyVersionName == '' || note == '') {
       return
     }
-    // let rolemsg = 
     let msg = addRule({industyVersionName, note});
     msg.then(res => {
-      console.log(res)
       if(res.success) {
         actionRef.current?.reloadAndRest();
         handleModalVisible(false);
@@ -304,7 +300,6 @@ const TableList: React.FC<{}> = () => {
             </Col>
           </Row>
           <Form.Item>
-            {roleMenucode}{rowMenucode}
             <Tree getRowMenucode={getRowMenucode} getRoleMenucode={getRoleMenucode} data={sourceData}/>
           </Form.Item>
           <Divider />

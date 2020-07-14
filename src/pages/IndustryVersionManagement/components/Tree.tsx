@@ -51,7 +51,6 @@ const Tree: React.FC<TreeProps> = (props:TreeProps) => {
                           selectedRoles.splice(selectedRoles.indexOf(item.menucode), 1);
                         }
                       }
-                      console.log(selectedRoles)
                       props.getRoleMenucode(selectedRoles)
                     }}
                   >

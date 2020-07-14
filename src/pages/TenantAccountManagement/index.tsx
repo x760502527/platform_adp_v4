@@ -6,7 +6,7 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 
 // import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
-import ReactPasswordForm from './components/ResetPasswordForm';
+import ResetPasswordForm from './components/ResetPasswordForm';
 import { TableListItem } from './data.d';
 import { queryRule, updateRule, removeRule } from './service';
 
@@ -86,12 +86,15 @@ const TableList: React.FC<{}> = () => {
   const [resetPassword, handleResetModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
+  // 分页器的total值
+  const [total, handlerTotal] = useState<number>(0);
   const actionRef = useRef<ActionType>();
   const columns: ProColumns<TableListItem>[] = [
     {
       title: '序号',
-      dataIndex: 'name',
+      dataIndex: 'id',
       sorter: true,
+      hideInSearch: true,
       rules: [
         {
           required: true,
@@ -101,24 +104,24 @@ const TableList: React.FC<{}> = () => {
     },
     {
       title: '租户名称',
-      dataIndex: 'desc',
-      valueType: 'textarea',
+      dataIndex: 'entityname',
+      valueType: 'textarea'
     },
     {
       title: '电子邮箱',
-      dataIndex: 'callNo'
+      dataIndex: 'usercode'
     },
     {
       title: '姓名',
-      dataIndex: 'status'
+      dataIndex: 'realname'
     },
     {
       title: '手机号码',
-      dataIndex: 'updatedAt'
+      dataIndex: 'cellphone'
     },
     {
       title: '用户状态',
-      dataIndex: 'status',
+      dataIndex: 'userstatus',
     },
     {
       title: '操作',
@@ -152,7 +155,7 @@ const TableList: React.FC<{}> = () => {
       <ProTable<TableListItem>
         headerTitle="查询表格"
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="id"
         rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
         toolBarRender={(action, { selectedRows }) => [
           <Button type="primary" onClick={() => handleModalVisible(true)}>
@@ -181,19 +184,18 @@ const TableList: React.FC<{}> = () => {
             </Dropdown>
           ),
         ]}
-        tableAlertRender={({ selectedRowKeys, selectedRows }) => (
-          <div>
-            已选择 <a style={{ fontWeight: 600 }}>{selectedRowKeys.length}</a> 项&nbsp;&nbsp;
-            <span>
-              服务调用次数总计 {selectedRows.reduce((pre, item) => pre + item.callNo, 0)} 万
-            </span>
-          </div>
-        )}
-        request={(params, sorter, filter) => queryRule({ ...params, sorter, filter })}
+        pagination={{defaultCurrent:1,total}}
+        request={(params, sorter, filter) => {
+          queryRule({...params}).then(res => {
+            handlerTotal(res.total);
+          })
+          return queryRule({...params});
+        }}
         columns={columns}
         rowSelection={{}}
+        onRequestError={(err) => {message.error('数据请求出错，请刷新页面后重试！')}}
       />
-      <ReactPasswordForm
+      <ResetPasswordForm
         modalVisible={resetPassword}
         onCancel={() => handleResetModalVisible(false)}
       >
@@ -224,7 +226,7 @@ const TableList: React.FC<{}> = () => {
             <Input.Password visibilityToggle={false} />
           </Form.Item>
         </Form>
-      </ReactPasswordForm>
+      </ResetPasswordForm>
       <UpdateForm
           onSubmit={async (value) => {
             const success = await handleUpdate(value);
