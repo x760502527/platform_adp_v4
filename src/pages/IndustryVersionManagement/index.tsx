@@ -9,6 +9,7 @@ import { Button, Divider, Dropdown, Menu, Input,Form, Row, Col, Select, message,
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm'
 import Tree from './components/Tree';
+import UpdateTree from './components/UpdateTree';
 
 // 引入CSS
 import "antd/dist/antd.css";
@@ -20,6 +21,7 @@ import { TableListItem, UpdateTableParams } from './data.d';
 
 // 引入封装网络请求获取所有项
 import { getRule, addRule, removeRule, updateRule, queryMenu } from './service';
+
 // 从Select组件中拿到Option
 const { Option } = Select;
 
@@ -42,50 +44,113 @@ const TableList: React.FC<{}> = () => {
   // 每一条数据recordItem的hook
   const [record, changeRecord] = useState<UpdateTableParams>({});
   // 新建model中的表格数据
-  const [sourceData, changeSourceData] = useState<object[]>([]);
+  const [sourceData, changeSourceData] = useState<menuListItem[]>([]);
+  // 修改model中的表格数据
+  const [updateSourceData, setUpdateSourceData] = useState<menuListItem[]>([]);
+
   // 选中的每行的menucode
   const [rowMenucode, setRowMenucode] = useState<string[]>([]);
   const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
+
+  // 默认的选中权限数据/菜单数据
+  const [selectedRoles, setRoles] = useState<string[]>([])
+  const [selectedMenu, setSelectedMenu] = useState<string[]>([]);
   const getRowMenucode = (code:any) => {
     setRowMenucode(code);
   }
   const getRoleMenucode = (code:any) => {
     setRoleMenucode(code);
   }
-  // 给每个菜单添加key
-  const handleData = (data:any) => {
-    data.forEach(item => {
-      if(item.children.length !== 0) {
-        handleData(item.children)
+  // 清空新建行业版本菜单
+  const clearMenus = () => {
+    queryMenu().then(res => {
+      if(res.success) {
+        changeSourceData(res.data)
       }
-      item.key = item.menucode;
-    })
-    return data;
+    }).catch(err => {
+      message.error('菜单获取失败，请刷新页面后重试');
+    });
+    changeName('');
+    changeNote('');
+    setRowMenucode([]);
+    setRoleMenucode([]);
+    handleModalVisible(false);
+  }
+  // 修改菜单权限时获取初始点击状态的menucode
+  interface menuListItem {
+    children: menuListItem[];
+    key?: string;
+    isClick: string;
+    menucode: string;
+    menuname: string;
+    operation: menuListItem[];
+  }
+  const getInitMenucode = (sourceData:menuListItem[]) => {
+    if(sourceData.length === 0) {
+      return
+    }
+    sourceData.forEach(item => {
+      if(item.children.length !== 0) {
+        getInitMenucode(item.children);
+      }
+      if(item.isClick === '1') {
+        if(!selectedMenu.includes(item.menucode)) {
+          selectedMenu.push(item.menucode);
+        }
+      }
+      item.operation.forEach(item => {
+        if(item.isClick === '1') {
+          if(!selectedRoles.includes(item.menucode)) {
+            selectedRoles.push(item.menucode);
+          }
+        }
+      })
+      console.log(selectedMenu, selectedRoles)
+    });
   }
   // 获取菜单树的方法
   useEffect(() => {
+    // console.log('执行了')
     queryMenu().then(res => {
       if(res.success) {
-        changeSourceData(handleData(res.data))
+        changeSourceData(res.data)
       }
     }).catch(err => {
       message.error('菜单获取失败，请刷新页面后重试');
     });
   }, []);
-
+  // 获取编辑菜单树的方法
+  useEffect(() => {
+    // console.log("获取编辑菜单树的方法", record)
+    if(record.key !== undefined) {
+      queryMenu(record.key).then(res => {
+        // console.log('请求数据并设置数据')
+        setUpdateSourceData([...res.data])
+        // console.log("设置的数据是", updateSourceData)
+      })
+    }
+  }, [record])
+  useEffect(() => {
+    getInitMenucode(updateSourceData);
+  }, [updateSourceData])
   // 创建行业版本的方法
   const onSubmit = (industyVersionName:string, note: string) => {
-    let menucode = rowMenucode.join(',') + ',' + roleMenucode.join(',');
+    let menuCodes:string;
+    if(rowMenucode.length !== 0 &&  roleMenucode.length !== 0) {
+      menuCodes = rowMenucode.join(',') + ',' + roleMenucode.join(',');
+    } else if(rowMenucode.length !== 0 && roleMenucode.length === 0) {
+      menuCodes = rowMenucode.join(',');
+    } else {
+      menuCodes = '';
+    }
     if(industyVersionName == '' || note == '') {
       return
     }
-    let msg = addRule({industyVersionName, note});
+    let msg = addRule({industyVersionName, note, menuCodes});
     msg.then(res => {
       if(res.success) {
         actionRef.current?.reloadAndRest();
-        handleModalVisible(false);
-        changeName('');
-        changeNote('');
+        clearMenus();
       }
     }).catch(err => {
       message.error('行业版本创建失败，请刷新页面后重试');
@@ -94,10 +159,14 @@ const TableList: React.FC<{}> = () => {
 
   // 修改行业版本的方法
   const onSubmitUpdate = (record:TableListItem) => {
+    console.log(selectedRoles, selectedMenu)
+    
+    let menuCodes = rowMenucode.join(',') + ',' + roleMenucode.join(',');
     const params = {
       key: record.key,
       note: record.note,
-      industyVersionName: record.industyVersionName
+      industyVersionName: record.industyVersionName,
+      menuCodes
     }
     let msg = updateRule(params);
     msg.then(res => {
@@ -182,12 +251,12 @@ const TableList: React.FC<{}> = () => {
       dataIndex: 'option',
       valueType: 'option',
       hideInSearch: true,
-      render: (_, record) => (
+      render: (_, recorditem) => (
         <>
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              changeRecord(record)
+              changeRecord(recorditem);
             }}
           >
             修改
@@ -195,7 +264,7 @@ const TableList: React.FC<{}> = () => {
           <Divider type="vertical" />
           <Popconfirm
             title="你确定要删除此条行业版本信息吗?"
-            onConfirm={() => onSubmitDelete(record)}
+            onConfirm={() => onSubmitDelete(recorditem)}
             okText="确定"
             cancelText="取消"
           >
@@ -212,6 +281,8 @@ const TableList: React.FC<{}> = () => {
     labelCol: { span: 8 },
     wrapperCol: { span: 16 },
   }
+
+
   return (
     <PageHeaderWrapper>
       <ProTable<TableListItem>
@@ -300,13 +371,19 @@ const TableList: React.FC<{}> = () => {
             </Col>
           </Row>
           <Form.Item>
-            <Tree getRowMenucode={getRowMenucode} getRoleMenucode={getRoleMenucode} data={sourceData}/>
+            <Tree
+              getRowMenucode={getRowMenucode} 
+              getRoleMenucode={getRoleMenucode} 
+              data={sourceData}
+            />
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
             <Col span="2" className="footer-button">
               <Form.Item name="button">
-                <Button onClick={() => {handleModalVisible(false)}}>取消</Button> 
+                <Button onClick={() => {
+                  clearMenus()
+                }}>取消</Button> 
               </Form.Item>
             </Col>
             <Col span="2" className="footer-button">
@@ -353,14 +430,20 @@ const TableList: React.FC<{}> = () => {
                 >
                 <Input 
                   onChange={(e) => {
-                  record.note = e.target.value
+                    record.note = e.target.value
                   }}
                 />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item>
-            <Tree getRowMenucode={getRowMenucode} getRoleMenucode={getRoleMenucode} data={sourceData}/>
+            <UpdateTree
+              selectedRoles={selectedRoles}
+              selectedMenu={selectedMenu} 
+              getRowMenucode={getRowMenucode} 
+              getRoleMenucode={getRoleMenucode} 
+              data={updateSourceData}
+            />
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
@@ -371,7 +454,13 @@ const TableList: React.FC<{}> = () => {
             </Col>
             <Col span="2" className="footer-button">
               <Form.Item name="button">
-                <Button htmlType="submit" type="primary" onClick={() => onSubmitUpdate(record)} >提交</Button> 
+                <Button 
+                  htmlType="submit" 
+                  type="primary" 
+                  onClick={() => onSubmitUpdate(record)} 
+                  >
+                  提交
+                </Button> 
               </Form.Item>
             </Col>
           </Row>

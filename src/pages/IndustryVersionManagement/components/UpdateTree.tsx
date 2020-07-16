@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Checkbox, Space } from 'antd';
 
 interface TreeProps {
   getRowMenucode(data:any): void;
   getRoleMenucode(data:any): void;
   data: any;
+  selectedRoles: string[];
+  selectedMenu: string[];
 }
 
-let Tree: React.FC<TreeProps> = (props:TreeProps) => {
+let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
   // 当前的选中权限数据
-  const [selectedRoles, setRoles] = useState<string[]>([])
+  const [selectedRoles, setRoles] = useState<string[]>(props.selectedRoles)
   // 选中的菜单
-  const [selectedRow, changeSelectedRow] = useState<object[]>([]);
+  const [selectedRow, changeSelectedRow] = useState<string[]>(props.selectedMenu);
+  useEffect(() => {
+    // console.log(selectedRoles, selectedRow)
+  })
   const columns = [
     {
       title: '菜单选项',
@@ -91,4 +96,4 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
   );
 };
 
-export default Tree;
+export default UpdateTree;

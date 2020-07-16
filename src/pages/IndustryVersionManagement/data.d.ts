@@ -19,6 +19,7 @@ export interface TableListItem {
   roleProps?:string;
   tenant?:string;
   industyVersionName?:string;
+  menuCodes?: string;
   note?:string;
   option?:number;
 }

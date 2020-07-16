@@ -19,24 +19,27 @@ export async function addRule(params: TableListItem) {
     method: 'POST',
     params: {
       rolename: params.industyVersionName,
-      memo: params.note
+      memo: params.note,
+      menuCodes: params.menuCodes
     }
   });
   return msg;
 }
 
 // 查询菜单树
-export async function queryMenu() {
+export async function queryMenu(id?:number) {
   const res:any = await request('/api/entityrole/queryEntityrolemenuByEntityrole', {
-    method: 'POST'
+    method: 'POST',
+    params: {
+      roleId: id
+    }
   });
   return res;
 }
 
 // 获取行业版本
 export async function getRule(params?: TableListParams) {
-  let msg:any;
-  await request<RequestData>('/api/entityrole/listEntityroles', {
+  let msg:any = await request<RequestData>('/api/entityrole/listEntityroles', {
     method: 'POST',
     params: {
       pageNum: params?.current,
@@ -44,11 +47,7 @@ export async function getRule(params?: TableListParams) {
       roleflag: params?.roleflag,
       rolename:params?.industyVersionName
     },
-  }).then(res => {
-    msg = res;
-  }).catch(err => {
-    console.log(err)
-  });
+  })
   // 获取原始数据并处理
   let sourceData:TableListItem[] = [];
   let list = msg.data.list;
