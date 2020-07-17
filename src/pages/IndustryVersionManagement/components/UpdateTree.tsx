@@ -9,14 +9,54 @@ interface TreeProps {
   selectedMenu: string[];
 }
 
+interface menuListItem {
+  children: menuListItem[];
+  key?: string;
+  isClick: string;
+  menucode: string;
+  menuname: string;
+  operation: menuListItem[];
+}
+
 let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
+  // // 当前的选中权限数据
+  // const [selectedRoles, setRoles] = useState<string[]>([...props.selectedRoles])
+  // // 选中的菜单
+  // const [selectedRow, setRows] = useState<string[]>([...props.selectedMenu]);
   // 当前的选中权限数据
-  const [selectedRoles, setRoles] = useState<string[]>(props.selectedRoles)
+  const [selectedRoles, setRoles] = useState<string[]>([])
   // 选中的菜单
-  const [selectedRow, changeSelectedRow] = useState<string[]>(props.selectedMenu);
+  const [selectedRow, setRows] = useState<string[]>([]);
+
+  const getInitMenucode = (sourceData:menuListItem[]) => {
+    if(sourceData.length === 0) {
+      return
+    }
+    sourceData.forEach(item => {
+      if(item.children.length !== 0) {
+        getInitMenucode(item.children);
+      }
+      if(item.isClick === '1') {
+        if(!selectedRow.includes(item.menucode)) {
+          selectedRow.push(item.menucode);
+        }
+      }
+      item.operation.forEach(item => {
+        if(item.isClick === '1') {
+          if(!selectedRoles.includes(item.menucode)) {
+            selectedRoles.push(item.menucode);
+          }
+        }
+      })
+      setRoles([...selectedRoles]);
+      setRows([...selectedRow]);
+      console.log(selectedRoles, selectedRow);
+    });
+  }
   useEffect(() => {
-    // console.log(selectedRoles, selectedRow)
-  })
+    getInitMenucode(props.data);
+  }, [props.data])
+  
   const columns = [
     {
       title: '菜单选项',
@@ -30,16 +70,31 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
               defaultChecked={record.isClick === '0'? false : true} 
               onChange={(event) => {
                 record.isClick = (event.target.checked === false ? '0' : '1');
-                if(event.target.checked) {
-                  if(!selectedRow.includes(record.menucode)) {
+                if(record.isClick === '0') {
+                  if(selectedRow.indexOf(record.menucode) !== -1) {
+                    selectedRow.splice(selectedRow.indexOf(record.menucode), 1);
+                    // setRoles([...selectedRoles]);
+                  }
+                  record.operation.forEach((item:any) => {
+                    if(selectedRoles.indexOf(item.menucode) !== -1) {
+                      selectedRoles.splice(selectedRoles.indexOf(item.menucode), 1);
+                    }
+                  });
+                } else {
+                  if(selectedRow.indexOf(record.menucode) === -1) {
                     selectedRow.push(record.menucode);
                   }
-                } else {
-                  if(selectedRow.includes(record.menucode)) {
-                    selectedRow.splice(selectedRow.indexOf(record.menucode), 1);
-                  }
+                  record.operation.forEach((item:any) => {
+                    if(item.isClick === '1') {
+                      selectedRoles.push(item.menucode);
+                    }
+                  });
                 }
-                props.getRowMenucode(selectedRow)
+                setRoles([...selectedRoles]);
+                setRows([...selectedRow])
+                props.getRoleMenucode(selectedRoles);
+                props.getRowMenucode(selectedRow);
+                console.log(selectedRoles, selectedRow)
               }}
             >
               {text}
@@ -60,10 +115,11 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
               return (
                 <span key={item.menucode}>
                   <Checkbox 
+                    disabled={record.isClick === '0' ? true : false}
                     defaultChecked={item.isClick === '0'? false : true} 
                     onChange={(event) => {
                       item.isClick = (event.target.checked === false ? '0' : '1');
-                      if(event.target.checked) {
+                      if(item.isClick === '1') {
                         if(!selectedRoles.includes(item.menucode)) {
                           selectedRoles.push(item.menucode);
                         }
@@ -72,7 +128,9 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
                           selectedRoles.splice(selectedRoles.indexOf(item.menucode), 1);
                         }
                       }
-                      props.getRoleMenucode(selectedRoles)
+                      setRoles(selectedRoles);
+                      props.getRoleMenucode(selectedRoles);
+                      console.log(selectedRoles, selectedRow)
                     }}
                   >
                     {item.menuname}

@@ -38,11 +38,11 @@ import "../../assets/css/common/common.css";
 const handleUpdate = async (fields: FormValueType) => {
   const hide = message.loading('正在配置');
   try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
+    // await updateRule({
+    //   name: fields.name,
+    //   desc: fields.desc,
+    //   key: fields.key,
+    // });
     hide();
 
     message.success('配置成功');
@@ -62,9 +62,9 @@ const handleRemove = async (selectedRows: TableListItem[]) => {
   const hide = message.loading('正在删除');
   if (!selectedRows) return true;
   try {
-    await removeRule({
-      key: selectedRows.map((row) => row.key),
-    });
+    // await removeRule({
+    //   key: selectedRows.map((row) => row.key),
+    // });
     hide();
     message.success('删除成功，即将刷新');
     return true;

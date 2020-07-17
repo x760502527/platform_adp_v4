@@ -83,12 +83,14 @@ export async function removeRule(id?: number) {
 
 // 编辑行业版本
 export async function updateRule(params: TableListItem) {
+  console.log(params.menuCodes)
   return request('/api/entityrole/updateEntityrole', {
     method: 'POST',
     params: {
       id: params.key,
       memo: params.note,
-      rolename: params.industyVersionName
+      rolename: params.industyVersionName,
+      menuCodes: params.menuCodes
     },
   });
 }

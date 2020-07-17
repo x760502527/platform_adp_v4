@@ -49,17 +49,22 @@ const TableList: React.FC<{}> = () => {
   const [updateSourceData, setUpdateSourceData] = useState<menuListItem[]>([]);
 
   // 选中的每行的menucode
-  const [rowMenucode, setRowMenucode] = useState<string[]>([]);
-  const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
+  // const [rowMenucode, setRowMenucode] = useState<string[]>([]);
+  // const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
+  let rowMenucode:string[] = [];
+  let roleMenucode:string[] = [];
 
   // 默认的选中权限数据/菜单数据
   const [selectedRoles, setRoles] = useState<string[]>([])
   const [selectedMenu, setSelectedMenu] = useState<string[]>([]);
-  const getRowMenucode = (code:any) => {
-    setRowMenucode(code);
+  const getRowMenucode = (code:string[]) => {
+    rowMenucode = code.slice(0);
+    console.log(code);
   }
   const getRoleMenucode = (code:any) => {
-    setRoleMenucode(code);
+    // setRoleMenucode(code);
+    roleMenucode = code.slice(0);
+    // console.log(code);
   }
   // 清空新建行业版本菜单
   const clearMenus = () => {
@@ -72,8 +77,8 @@ const TableList: React.FC<{}> = () => {
     });
     changeName('');
     changeNote('');
-    setRowMenucode([]);
-    setRoleMenucode([]);
+    rowMenucode.length = 0;
+    roleMenucode.length = 0;
     handleModalVisible(false);
   }
   // 修改菜单权限时获取初始点击状态的menucode
@@ -105,7 +110,7 @@ const TableList: React.FC<{}> = () => {
           }
         }
       })
-      console.log(selectedMenu, selectedRoles)
+      // console.log(selectedMenu, selectedRoles)
     });
   }
   // 获取菜单树的方法
@@ -121,28 +126,32 @@ const TableList: React.FC<{}> = () => {
   }, []);
   // 获取编辑菜单树的方法
   useEffect(() => {
-    // console.log("获取编辑菜单树的方法", record)
     if(record.key !== undefined) {
       queryMenu(record.key).then(res => {
-        // console.log('请求数据并设置数据')
-        setUpdateSourceData([...res.data])
-        // console.log("设置的数据是", updateSourceData)
+        setUpdateSourceData([...res.data]);
+      }).then(err => {
+        message.error('请求菜单失败，请刷新页面后重试')
       })
     }
-  }, [record])
+  }, [])
   useEffect(() => {
     getInitMenucode(updateSourceData);
-  }, [updateSourceData])
-  // 创建行业版本的方法
-  const onSubmit = (industyVersionName:string, note: string) => {
+  }, [updateSourceData]);
+  // 处理没有选中菜单但选中了权限的方法
+  const handlerNoSelectedRow = (Row: string[], Role: string[]) => {
     let menuCodes:string;
-    if(rowMenucode.length !== 0 &&  roleMenucode.length !== 0) {
-      menuCodes = rowMenucode.join(',') + ',' + roleMenucode.join(',');
-    } else if(rowMenucode.length !== 0 && roleMenucode.length === 0) {
-      menuCodes = rowMenucode.join(',');
+    if(Row.length !== 0 &&  Role.length !== 0) {
+      menuCodes = Row.join(',') + ',' + Role.join(',');
+    } else if(Row.length !== 0 && Role.length === 0) {
+      menuCodes = Row.join(',');
     } else {
       menuCodes = '';
     }
+    return menuCodes;
+  }
+  // 创建行业版本的方法
+  const onSubmit = (industyVersionName:string, note: string) => {
+    let menuCodes:string = handlerNoSelectedRow(rowMenucode, roleMenucode);
     if(industyVersionName == '' || note == '') {
       return
     }
@@ -156,13 +165,13 @@ const TableList: React.FC<{}> = () => {
       message.error('行业版本创建失败，请刷新页面后重试');
     })
   }
-
   // 修改行业版本的方法
   const onSubmitUpdate = (record:TableListItem) => {
-    console.log(selectedRoles, selectedMenu)
-    
-    let menuCodes = rowMenucode.join(',') + ',' + roleMenucode.join(',');
-    const params = {
+    console.log(rowMenucode, roleMenucode)
+    let menuCodes:string = handlerNoSelectedRow(rowMenucode, roleMenucode);
+    console.log(menuCodes)
+    // let menuCodes = handlerNoSelectedRow(rowMenucode, roleMenucode);
+    let params = {
       key: record.key,
       note: record.note,
       industyVersionName: record.industyVersionName,
@@ -257,6 +266,10 @@ const TableList: React.FC<{}> = () => {
             onClick={() => {
               handleUpdateModalVisible(true);
               changeRecord(recorditem);
+              // console.log(recorditem.key)
+              queryMenu(recorditem.key).then(res => {
+                setUpdateSourceData([...res.data]);
+              })
             }}
           >
             修改
@@ -281,7 +294,6 @@ const TableList: React.FC<{}> = () => {
     labelCol: { span: 8 },
     wrapperCol: { span: 16 },
   }
-
 
   return (
     <PageHeaderWrapper>
@@ -401,7 +413,12 @@ const TableList: React.FC<{}> = () => {
         </Form>
       </CreateForm>
       <UpdateForm 
-        onCancel={() => handleUpdateModalVisible(false)} 
+        onCancel={() => {
+          queryMenu(record.key).then(res => {
+            setUpdateSourceData([...res.data]);
+            handleUpdateModalVisible(false)
+          })
+        }} 
         modalVisible={updateModalVisible}
         >
         <Form name="control-ref" className="updateForm">
@@ -449,7 +466,12 @@ const TableList: React.FC<{}> = () => {
           <Row justify={"end"}>
             <Col span="2" className="footer-button">
               <Form.Item name="button">
-                <Button onClick={() => {handleUpdateModalVisible(false)}}>取消</Button> 
+                <Button onClick={() => {
+                  queryMenu(record.key).then(res => {
+                    setUpdateSourceData([...res.data]);
+                    handleUpdateModalVisible(false)
+                  })
+                  }}>取消</Button> 
               </Form.Item>
             </Col>
             <Col span="2" className="footer-button">
