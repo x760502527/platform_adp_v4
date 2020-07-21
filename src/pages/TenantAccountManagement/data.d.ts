@@ -1,3 +1,8 @@
+export interface UserRoleParams {
+  roleId?: number;
+  userCode?: string;
+}
+
 export interface RoleParams {
   entityid?: string
 }

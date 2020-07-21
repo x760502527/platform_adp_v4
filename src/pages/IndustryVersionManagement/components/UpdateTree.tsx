@@ -19,10 +19,6 @@ interface menuListItem {
 }
 
 let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
-  // // 当前的选中权限数据
-  // const [selectedRoles, setRoles] = useState<string[]>([...props.selectedRoles])
-  // // 选中的菜单
-  // const [selectedRow, setRows] = useState<string[]>([...props.selectedMenu]);
   // 当前的选中权限数据
   const [selectedRoles, setRoles] = useState<string[]>([])
   // 选中的菜单
@@ -50,7 +46,6 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
       })
       setRoles([...selectedRoles]);
       setRows([...selectedRow]);
-      console.log(selectedRoles, selectedRow);
     });
   }
   useEffect(() => {
@@ -73,7 +68,6 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
                 if(record.isClick === '0') {
                   if(selectedRow.indexOf(record.menucode) !== -1) {
                     selectedRow.splice(selectedRow.indexOf(record.menucode), 1);
-                    // setRoles([...selectedRoles]);
                   }
                   record.operation.forEach((item:any) => {
                     if(selectedRoles.indexOf(item.menucode) !== -1) {
@@ -128,9 +122,10 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
                           selectedRoles.splice(selectedRoles.indexOf(item.menucode), 1);
                         }
                       }
-                      setRoles(selectedRoles);
+                      setRoles([...selectedRoles]);
+                      setRows([...selectedRow])
                       props.getRoleMenucode(selectedRoles);
-                      console.log(selectedRoles, selectedRow)
+                      props.getRowMenucode(selectedRow);
                     }}
                   >
                     {item.menuname}

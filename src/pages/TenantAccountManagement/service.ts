@@ -1,10 +1,18 @@
 import request from 'umi-request';
 import { message } from 'antd';
-import { TableListParams } from './data.d';
-import { TableListItem, RoleParams } from './data.d';
+import { TableListItem, RoleParams, UserRoleParams, TableListParams } from './data.d';
+
+export async function createUserRoles(params: UserRoleParams) {
+  return request('/api/entityuser/entityuserRole', {
+    method: 'POST',
+    params: {
+      roleId: params?.roleId,
+      userCode: params?.userCode
+    }
+  })
+}
 
 export async function queryRoleName(params:RoleParams) {
-  console.log(params)
   return request('/api/entityuser/queryRole', {
     method: 'POST',
     params: {

@@ -47,26 +47,19 @@ const TableList: React.FC<{}> = () => {
   const [sourceData, changeSourceData] = useState<menuListItem[]>([]);
   // 修改model中的表格数据
   const [updateSourceData, setUpdateSourceData] = useState<menuListItem[]>([]);
-
   // 选中的每行的menucode
-  // const [rowMenucode, setRowMenucode] = useState<string[]>([]);
-  // const [roleMenucode, setRoleMenucode] = useState<string[]>([]);
   let rowMenucode:string[] = [];
   let roleMenucode:string[] = [];
-
   // 默认的选中权限数据/菜单数据
   const [selectedRoles, setRoles] = useState<string[]>([])
   const [selectedMenu, setSelectedMenu] = useState<string[]>([]);
   const getRowMenucode = (code:string[]) => {
     rowMenucode = code.slice(0);
-    console.log(code);
   }
-  const getRoleMenucode = (code:any) => {
-    // setRoleMenucode(code);
+  const getRoleMenucode = (code:string[]) => {
     roleMenucode = code.slice(0);
-    // console.log(code);
   }
-  // 清空新建行业版本菜单
+  // 清空新建行业版本输入框中的内容
   const clearMenus = () => {
     queryMenu().then(res => {
       if(res.success) {
@@ -90,6 +83,7 @@ const TableList: React.FC<{}> = () => {
     menuname: string;
     operation: menuListItem[];
   }
+  // 编辑页面打开时执行，获取初始menucode
   const getInitMenucode = (sourceData:menuListItem[]) => {
     if(sourceData.length === 0) {
       return
@@ -110,13 +104,12 @@ const TableList: React.FC<{}> = () => {
           }
         }
       })
-      // console.log(selectedMenu, selectedRoles)
     });
   }
-  // 获取菜单树的方法
   useEffect(() => {
-    // console.log('执行了')
+    // 获取菜单树的方法
     queryMenu().then(res => {
+      console.log('获取菜单树')
       if(res.success) {
         changeSourceData(res.data)
       }
@@ -124,16 +117,6 @@ const TableList: React.FC<{}> = () => {
       message.error('菜单获取失败，请刷新页面后重试');
     });
   }, []);
-  // 获取编辑菜单树的方法
-  useEffect(() => {
-    if(record.key !== undefined) {
-      queryMenu(record.key).then(res => {
-        setUpdateSourceData([...res.data]);
-      }).then(err => {
-        message.error('请求菜单失败，请刷新页面后重试')
-      })
-    }
-  }, [])
   useEffect(() => {
     getInitMenucode(updateSourceData);
   }, [updateSourceData]);
@@ -264,11 +247,15 @@ const TableList: React.FC<{}> = () => {
         <>
           <a
             onClick={() => {
-              handleUpdateModalVisible(true);
               changeRecord(recorditem);
-              // console.log(recorditem.key)
               queryMenu(recorditem.key).then(res => {
+                // 设置修改菜单的数据
                 setUpdateSourceData([...res.data]);
+                // 然后显示更新组件
+                handleUpdateModalVisible(true);
+              }).catch(err => {
+                console.log(err);
+                message.error('请求菜单失败，请刷新页面后重试');
               })
             }}
           >

@@ -1,84 +1,18 @@
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Divider, Dropdown, Menu, message, Form, Input, Select } from 'antd';
+import { Button, Divider, Dropdown, Menu, message, Form, Input } from 'antd';
 import React, { useState, useRef, useEffect } from 'react';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 
 // import CreateForm from './components/CreateForm';
-import CreateForm, { FormValueType } from './components/CreateForm';
+import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 import ResetPasswordForm from './components/ResetPasswordForm';
 import { TableListItem } from './data.d';
-import { queryRule, updateRule, removeRule } from './service';
+import { queryRule, updateRule } from './service';
 
 // 引入样式
 import "../../assets/css/common/common.css";
-import { values } from 'lodash';
-
-// 从Select组件中拿到Option
-// const { Option } = Select;
-
-/**
- * 添加节点
- * @param fields
- */
-// const handleAdd = async (fields: TableListItem) => {
-//   const hide = message.loading('正在添加');
-//   try {
-//     await addRule({ ...fields });
-//     hide();
-//     message.success('添加成功');
-//     return true;
-//   } catch (error) {
-//     hide();
-//     message.error('添加失败请重试！');
-//     return false;
-//   }
-// };
-
-/**
- * 更新节点
- * @param fields
- */
-// const handleUpdate = async (fields: FormValueType) => {
-//   const hide = message.loading('正在配置');
-//   try {
-//     // await updateRule({
-//     //   name: fields.name,
-//     //   desc: fields.desc,
-//     //   key: fields.key,
-//     // });
-//     hide();
-
-//     message.success('配置成功');
-//     return true;
-//   } catch (error) {
-//     hide();
-//     message.error('配置失败请重试！');
-//     return false;
-//   }
-// };
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: TableListItem[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    // await removeRule({
-    //   key: selectedRows.map((row) => row.key),
-    // });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
 
 // label 和 input 的布局
 const formLayout = {
@@ -94,9 +28,13 @@ interface ResetParams {
 }
 
 const TableList: React.FC<{}> = () => {
+  // 新建的modal是否可见
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
+  // 重置密码的modal是否可见
   const [resetPassword, handleResetModalVisible] = useState<boolean>(false);
+  // 修改账户信息的modal是否可见
   const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
+  // 设置每一步表单的值
   const [stepFormValues, setStepFormValues] = useState({});
   // 分页器的total值
   const [total, handlerTotal] = useState<number>(0);
@@ -107,7 +45,7 @@ const TableList: React.FC<{}> = () => {
   // 存入当前点击的record
   const [recordItem, setRecordItem] = useState<ResetParams>({id: 0, usercode: '', pwd: ''});
   // 重置密码表单的值
-  const [resetPwdForm, setResetPwdForm] = useState({});
+  // const [resetPwdForm, setResetPwdForm] = useState({});
   const actionRef = useRef<ActionType>();
   // 获取form
   const [form] = Form.useForm();
@@ -187,8 +125,8 @@ const TableList: React.FC<{}> = () => {
           <Divider type="vertical" />
           <a
             onClick={() => {
-              handleResetModalVisible(true);
               setRecordItem(record);
+              handleResetModalVisible(true);
             }}
           >
             重置密码
@@ -215,7 +153,6 @@ const TableList: React.FC<{}> = () => {
                 <Menu
                   onClick={async (e) => {
                     if (e.key === 'remove') {
-                      await handleRemove(selectedRows);
                       action.reload();
                     }
                   }}
@@ -239,7 +176,7 @@ const TableList: React.FC<{}> = () => {
             // 将租户信息传入新建租户账户页面中
             let arr = res.data.map(item => {
               return {"id":item.id ,"entityid": item.id, "entityname": item.entityname}
-            })
+            });
             setEntitys([...arr]);
           });
           return queryRule({...params});
@@ -252,12 +189,11 @@ const TableList: React.FC<{}> = () => {
       <ResetPasswordForm
         modalVisible={resetPassword}
         onCancel={() => handleResetModalVisible(false)}
-        // formData={form.getFieldsValue()}
         onSubmit={() => {
-          console.log(form.getFieldsValue());
-          updateRule({id: recordItem.id, pwd: recordItem.pwd}).then(res => {
-            console.log(res);
-            message.success('修改密码成功')
+          let usercode = form.getFieldsValue().usercode;
+          updateRule({id: recordItem.id, pwd: recordItem.pwd, usercode}).then(res => {
+            message.success('修改密码成功');
+            handleResetModalVisible(false);
           }).catch(err => {
             message.error('修改密码失败，请刷新页面后重试');
           })
