@@ -44,16 +44,16 @@ const TableList: React.FC<{}> = () => {
   const [isSuccess, setSuccess] = useState(false);
   // 存入当前点击的record
   const [recordItem, setRecordItem] = useState<ResetParams>({id: 0, usercode: '', pwd: ''});
-  // 重置密码表单的值
-  // const [resetPwdForm, setResetPwdForm] = useState({});
+  
   const actionRef = useRef<ActionType>();
   // 获取form
   const [form] = Form.useForm();
+  // 成功创建后的回调
   useEffect(() => {
     if(isSuccess) {
       actionRef.current?.reload();
     }
-  });
+  }, [isSuccess]);
   const columns: ProColumns<TableListItem>[] = [
     {
       title: '序号',
@@ -239,8 +239,7 @@ const TableList: React.FC<{}> = () => {
           console.log(value);
         }}
         onCancel={() => handleModalVisible(false)}
-        updateModalVisible={createModalVisible}
-        values={stepFormValues}
+        createModalVisible={createModalVisible}
         isSuccess={(val:boolean) => {
           setSuccess(val)
         }}

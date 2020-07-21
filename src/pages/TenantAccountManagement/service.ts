@@ -25,7 +25,6 @@ export async function queryRule(params?: TableListParams) {
   let msg:any;
   let sourceData:TableListItem[] = [];
   let total:number;
-  // console.log(params)
   await request('/api/entityuser/selectPage', {
     method: 'POST',
     params: {
@@ -49,7 +48,7 @@ export async function queryRule(params?: TableListParams) {
   // let sourceData:TableListItem[] = msg.data.data.list;
   return {
     data: sourceData,
-    total: 0,
+    total: msg.data.data.total,
     success: true
   }
 }

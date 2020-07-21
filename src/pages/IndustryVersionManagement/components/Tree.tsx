@@ -12,11 +12,13 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
   const [selectedRoles, setRoles] = useState<string[]>([]);
   // 选中项
   const rowSelection = {
+    checkStrictly: false,
     onChange: (selectedRowKeys: any, selectedRows: any) => {
       props.getRowMenucode(selectedRowKeys);
       console.log(selectedRowKeys);
     },
     onSelect: (record:any, selected:any, selectedRows:any, nativeEvent:any) => {
+      console.log(record)
       // 改变record数据中的点击状态
       record.isClick = selected ? '1' : '0';
       // 取消勾选后赋权不可选，清空赋权数据
@@ -60,7 +62,7 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
               return (
                 <span key={item.menucode}>
                   <Checkbox
-                    disabled={record.isClick === '0' ? true : false}
+                    
                     defaultChecked={item.isClick === '0'? false : true} 
                     onChange={(event) => {
                       item.isClick = (event.target.checked === false ? '0' : '1');

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CheckCircleTwoTone } from '@ant-design/icons';
 import { Form, Button, Input, Modal, Radio, Select, Steps, Row, Col, Divider, message } from 'antd';
-
+// 引入网络请求
 import { addRule, queryRoleName, createUserRoles} from '../service';
-import { TableListItem } from '../data.d';
 
 // 引入样式
 import '../../../assets/css/TenantAccountManager/index.css';
-
+// 用户所填表格接口
 export interface FormValueType {
   userstatus?: number;
   realname?: string;
@@ -19,11 +18,10 @@ export interface FormValueType {
   entityid?: string;
 }
 
-export interface UpdateFormProps {
+export interface CreateFormProps {
   onCancel: (flag?: boolean, formVals?: FormValueType) => void;
   onSubmit: (values: FormValueType) => void;
-  updateModalVisible: boolean;
-  values: Partial<TableListItem>;
+  createModalVisible: boolean;
   allEntity: string[];
   isSuccess: (val:boolean) => void;
 }
@@ -33,20 +31,17 @@ export interface UpdateFormState {
   currentStep: number;
 }
 
+// 从antd中获取所需组件
 const FormItem = Form.Item;
 const { Step } = Steps;
 const { Option } = Select;
-const formLayout = {
-  labelCol: { span: 5 },
-  wrapperCol: { span: 17 },
-};
 
 interface EntirysInfo {
   entityname: string;
   entityid: string;
 }
 
-const CreateForm: React.FC<UpdateFormProps> = (props) => {
+const CreateForm: React.FC<CreateFormProps> = (props) => {
   const [formVals, setFormVals] = useState<FormValueType>({});
 
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -60,29 +55,53 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
   const [userPermissions, setUserPermissions] = useState(0)
   // 解构赋值
   const {
-    onSubmit: handleUpdate,
-    onCancel: handleUpdateModalVisible,
-    updateModalVisible,
+    onSubmit: handleCreate,
+    onCancel: handleCreateModalVisible,
+    createModalVisible,
     allEntity
   } = props;
   const forward = () => setCurrentStep(currentStep + 1);
-
   const backward = () => setCurrentStep(currentStep - 1);
-
+  // 点击下一步执行
   const handleNext = async () => {
     // 验证所有字段并获取字段数据
-    const fieldsValue = await form.validateFields();
-    // 存入state
+    const fieldsValue = await form.validateFields()
+    // 设置表单的所有值
     setFormVals({ ...formVals, ...fieldsValue });
     // 下一步操作
     if (currentStep < 2) {
       forward();
     } else {
-      // 完成时执行的操作
-      handleUpdate({ ...formVals,...fieldsValue });
+      handleCreate({ ...formVals,...fieldsValue });
     }
   };
-
+  // 发送表单数据
+  const sendFormData = () => {
+    allEntity.forEach((item:any) => {
+      if(item.id === form.getFieldValue('id')) {
+        queryRoleName({entityid: item.entityid}).then(res => {
+          setSelectRoles(res.data);
+        }).catch(err => {
+          message.error('获取用户角色菜单出错，请刷新页面后重试')
+        });
+        setEntityInfo({entityname: item.entityname, entityid: item.entityid});
+        form.validateFields().then(res => {
+          setFormVals({ entityname: item.entityname, entityid: item.entityid, ...res });
+          let params:any = { entityname: item.entityname, entityid: item.entityid, ...res };
+          delete params.id;
+          addRule({...params}).then(res => {
+            message.success('账号基本信息创建成功');
+          }).catch(err => {
+            message.error('创建账号失败，请刷新页面后重试')
+          });
+        })
+      }
+    });
+    if (currentStep < 2) {
+      forward();
+    }
+  }
+  // 渲染的内容
   const renderContent = () => {
     if (currentStep === 1) {
       return (
@@ -131,9 +150,11 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
           <Row>
             <Col span="24">
               <Radio.Group>
+                {console.log(selectRoles)}
                 {
+
                   selectRoles.map(item => {
-                    console.log(selectRoles)
+                    
                     return (
                       <Radio key={item.id} value={item.id} onChange={(event) => {
                         setUserPermissions(event.target.value);
@@ -244,7 +265,8 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
             rules={[{ 
               required: true, 
               message: '不能重复，必填，长度<30个字',
-              pattern: new RegExp(/^[\u4e00-\u9fa5a-zA-Z@]{1,30}$/)
+              min: 1,
+              max: 30
             }]}
           >
             <Input placeholder="请输入"/>
@@ -304,12 +326,12 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
           <Button style={{ float: 'left' }} onClick={backward}>
             上一步
           </Button>
-          <Button onClick={() => handleUpdateModalVisible(false)}>取消</Button>
+          <Button onClick={() => handleCreateModalVisible(false)}>取消</Button>
           <Button type="primary" onClick={() => {
             createUserRoles({roleId: userPermissions, userCode: formVals.usercode}).then(res => {
-              console.log(res)
               if(res.success) {
-                message.success('账号配置角色成功')
+                message.success('账号配置角色成功');
+                handleNext()
               }
             }).catch(err => {
               message.success('账号配置角色失败')
@@ -324,7 +346,7 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
       return (
         <>
           <Button type="primary" onClick={() => {
-            handleUpdateModalVisible(false);
+            handleCreateModalVisible(false);
             props.isSuccess(true);
             }}>
             关闭
@@ -334,24 +356,8 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
     }
     return (
       <>
-        <Button onClick={() => handleUpdateModalVisible(false)}>取消</Button>
-        <Button type="primary" onClick={() => {
-          allEntity.forEach((item:any) => {
-            if(item.id === form.getFieldValue('id')) {
-              queryRoleName({entityid: item.entityid}).then(res => {
-                setSelectRoles(res.data);
-              });
-              setEntityInfo({entityname: item.entityname, entityid: item.entityid});
-            }
-          });
-          let params:any = {...formVals, ...entityInfo};
-          delete params.id;
-          addRule({...params}).then(res => {
-            handleNext();
-          }).catch(err => {
-            message.error('创建账号失败，请刷新页面后重试')
-          });
-          }}>
+        <Button onClick={() => handleCreateModalVisible(false)}>取消</Button>
+        <Button type="primary" onClick={() => sendFormData()}>
           下一步
         </Button>
       </>
@@ -365,9 +371,9 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
       bodyStyle={{ padding: '32px 32px 50px' }}
       destroyOnClose
       title="新建租户"
-      visible={updateModalVisible}
+      visible={createModalVisible}
       footer={renderFooter()}
-      onCancel={() => handleUpdateModalVisible()}
+      onCancel={() => handleCreateModalVisible()}
     >
       <Steps style={{ marginBottom: 28 }} size="small" current={currentStep}>
         <Step title="基本账户信息" />
@@ -376,7 +382,8 @@ const CreateForm: React.FC<UpdateFormProps> = (props) => {
       </Steps>
       <Form
         labelAlign="left"
-        {...formLayout}
+        labelCol={{ span: 5} }
+        wrapperCol= {{span: 17 }}
         form={form}
         className="create-account-form"
       >

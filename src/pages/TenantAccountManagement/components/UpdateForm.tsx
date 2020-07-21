@@ -6,10 +6,8 @@ import { updateRule } from '../service';
 import { TableListItem } from '../data.d';
 
 // 引入样式
-import '../../../assets/css/TenantAccountManager/index.css'
-
-// const Group = Radio.Group;
-
+import '../../../assets/css/TenantAccountManager/index.css';
+// 表单值的接口
 export interface FormValueType {
   userstatus?: number;
   realname?: string;
@@ -17,7 +15,7 @@ export interface FormValueType {
   cellphone?: number;
   pwd?: string;
 }
-
+// 接收的props接口
 export interface UpdateFormProps {
   onCancel: (flag?: boolean, formVals?: FormValueType) => void;
   onSubmit: (values: FormValueType) => void;
@@ -47,16 +45,8 @@ interface EntirysInfo {
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => {
   const [formVals, setFormVals] = useState<FormValueType>({});
-
   const [currentStep, setCurrentStep] = useState<number>(0);
-
-  const [form] = Form.useForm();
-
-  form.setFieldsValue({
-    
-  })
   const [entityInfo, setEntityInfo] = useState<EntirysInfo>({entityid: 0, entityname: ''});
-
   const {
     onSubmit: handleUpdate,
     onCancel: handleUpdateModalVisible,
@@ -64,14 +54,14 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
     values,
     allEntity
   } = props;
-
+  // 创建表单的实例
+  const [form] = Form.useForm();
   const forward = () => setCurrentStep(currentStep + 1);
 
   const backward = () => setCurrentStep(currentStep - 1);
 
   const handleNext = async (val:any) => {
     const fieldsValue = await form.validateFields();
-    console.log(fieldsValue)
     setFormVals({ ...formVals, ...fieldsValue });
     if (currentStep < 2) {
       forward();
@@ -209,7 +199,11 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
             name="realname"
             label="姓名"
             extra="默认商家联系人，字母和汉字组成，长度<20个字"
-            rules={[{ required: true, message: '默认商家联系人，字母和汉字组成，长度<20个字' }]}
+            rules={[{ 
+              required: true, 
+              message: '默认商家联系人，字母和汉字组成，长度<20个字',
+              pattern: new RegExp(/^[\u4e00-\u9fa5a-zA-Z]{1,20}$/)
+            }]}
           >
             <Input placeholder="请输入" />
           </FormItem>
@@ -221,7 +215,12 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
             name="usercode"
             label="电子邮箱"
             extra="不能重复，必填，长度<30个字"
-            rules={[{ required: true, message: '不能重复，必填，长度<30个字' }]}
+            rules={[{ 
+              required: true, 
+              message: '不能重复，必填，长度<30个字',
+              min: 1,
+              max: 30
+            }]}
           >
             <Input placeholder="请输入" />
           </FormItem>
@@ -231,7 +230,11 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
             name="cellphone"
             label="手机号码"
             extra="不能为空，由3-16位英文字符、数字组成"
-            rules={[{ required: true, message: '不能为空，由3-16位英文字符、数字组成' }]}
+            rules={[{ 
+              required: true, 
+              message: '不能为空，由3-16位英文字符、数字组成',
+              pattern: new RegExp(/^[0-9a-zA-Z]{3,16}$/)
+            }]}
           >
             <Input placeholder="请输入" />
           </FormItem>
@@ -243,7 +246,11 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
               name="pwd"
               label="登录密码"
               extra="不能为空，由3-16位英文字符、数字组成"
-              rules={[{ required: true, message: '不能为空，由3-16位英文字符、数字组成' }]}
+              rules={[{ 
+                required: true, 
+                message: '不能为空，由3-16位英文字符、数字组成',
+                pattern: new RegExp(/^[0-9a-zA-Z]{3,16}$/)
+              }]}
             >
               <Input placeholder="请输入" />
             </FormItem>
