@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircleTwoTone } from '@ant-design/icons';
 import { Form, Button, Input, Modal, Radio, Select, Steps, Row, Col, Divider, message } from 'antd';
 // 引入网络请求
@@ -52,7 +52,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
 
   const [selectRoles, setSelectRoles] = useState<any[]>([]);
   // 新增用户的权限
-  const [userPermissions, setUserPermissions] = useState(0)
+  const [userPermissions, setUserPermissions] = useState(0);
   // 解构赋值
   const {
     onSubmit: handleCreate,
@@ -60,6 +60,10 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
     createModalVisible,
     allEntity
   } = props;
+  useEffect(() => {
+    
+    console.log(allEntity)
+  }, [allEntity]);
   const forward = () => setCurrentStep(currentStep + 1);
   const backward = () => setCurrentStep(currentStep - 1);
   // 点击下一步执行

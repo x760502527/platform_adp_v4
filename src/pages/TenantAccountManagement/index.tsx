@@ -175,8 +175,13 @@ const TableList: React.FC<{}> = () => {
             handlerTotal(res.total);
             // 将租户信息传入新建租户账户页面中
             let arr = res.data.map(item => {
-              return {"id":item.id ,"entityid": item.id, "entityname": item.entityname}
+              return {"id":item.id ,"entityid": item.entityid, "entityname": item.entityname}
             });
+            let hash = {};
+            arr = arr.reduce((arr:any, item:any) => {
+              hash[item.entityid] ? '' : hash[item.entityid] = true && arr.push(item);
+              return arr
+            }, [])
             setEntitys([...arr]);
           });
           return queryRule({...params});
