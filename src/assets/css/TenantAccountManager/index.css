@@ -42,3 +42,9 @@
 .tenant-account-info .name-end {
   margin-right: 16px;
 }
+
+.account-role-title {
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 22px;
+}

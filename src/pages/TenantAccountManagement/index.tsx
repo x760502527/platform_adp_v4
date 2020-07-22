@@ -8,8 +8,8 @@ import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 import ResetPasswordForm from './components/ResetPasswordForm';
-import { TableListItem } from './data.d';
-import { queryRule, updateRule } from './service';
+import { TableListItem, ResetParams, TatentListItem } from './data.d';
+import { queryRule, updateRule, querySingalUserInfo } from './service';
 
 // 引入样式
 import "../../assets/css/common/common.css";
@@ -19,26 +19,32 @@ const formLayout = {
   labelCol: { span: 5 },
   wrapperCol: { span: 17 }
 };
-
-// 重置密码的接口
-interface ResetParams {
-  id?: number;
-  usercode?: string;
-  pwd?: string;
+// 根据对象数组中对象的某个属性值去重方法
+const removeSameFature = (arrData:TatentListItem[]) => {
+  let arr = arrData.map((item) => {
+    return {"id":item.id ,"entityid": item.entityid, "entityname": item.entityname}
+  });
+  let hash = {};
+  // 根据租户entityid去重
+  arr = arr.reduce((arr:any, item:any) => {
+    hash[item.entityid] ? '' : hash[item.entityid] = true && arr.push(item);
+    return arr
+  }, []);
+  return arr;
 }
 
 const TableList: React.FC<{}> = () => {
-  // 新建的modal是否可见
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
+  // 新建账户的modal是否可见
+  const [createModalVisible, setCreateModalVisible] = useState<boolean>(false);
   // 重置密码的modal是否可见
-  const [resetPassword, handleResetModalVisible] = useState<boolean>(false);
+  const [resetPassword, setResetModalVisible] = useState<boolean>(false);
   // 修改账户信息的modal是否可见
-  const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
-  // 设置每一步表单的值
+  const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
+  // 设置修改表单组件的表单初始值
   const [stepFormValues, setStepFormValues] = useState({});
   // 分页器的total值
-  const [total, handlerTotal] = useState<number>(0);
-  // 所有的租户名称数组
+  const [total, setTotal] = useState<number>(0);
+  // 所有的租户数组
   const [entitys, setEntitys] = useState<any[]>([]);
   // 新建账户是否成功
   const [isSuccess, setSuccess] = useState(false);
@@ -51,7 +57,7 @@ const TableList: React.FC<{}> = () => {
   // 成功创建后的回调
   useEffect(() => {
     if(isSuccess) {
-      actionRef.current?.reload();
+      actionRef.current?.reloadAndRest();
     }
   }, [isSuccess]);
   const columns: ProColumns<TableListItem>[] = [
@@ -59,13 +65,7 @@ const TableList: React.FC<{}> = () => {
       title: '序号',
       dataIndex: 'id',
       sorter: true,
-      hideInSearch: true,
-      rules: [
-        {
-          required: true,
-          message: '规则名称为必填项',
-        },
-      ],
+      hideInSearch: true
     },
     {
       title: '租户名称',
@@ -116,8 +116,16 @@ const TableList: React.FC<{}> = () => {
         <>
           <a
             onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              querySingalUserInfo(record.id).then(res => {
+                if(res.mesg === 'successful') {
+                  setUpdateModalVisible(true);
+                  setStepFormValues(res.data);
+                } else {
+                  message.error(res.mesg);
+                }
+              }).catch(err => {
+                message.error('打开页面失败，请刷新页面后重试');
+              }); 
             }}
           >
             详情
@@ -126,7 +134,7 @@ const TableList: React.FC<{}> = () => {
           <a
             onClick={() => {
               setRecordItem(record);
-              handleResetModalVisible(true);
+              setResetModalVisible(true);
             }}
           >
             重置密码
@@ -144,7 +152,7 @@ const TableList: React.FC<{}> = () => {
         rowKey="id"
         rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
         toolBarRender={(action, { selectedRows }) => [
-          <Button type="primary" onClick={() => handleModalVisible(true)}>
+          <Button type="primary" onClick={() => setCreateModalVisible(true)}>
             <PlusOutlined /> 新建
           </Button>,
           selectedRows && selectedRows.length > 0 && (
@@ -169,22 +177,19 @@ const TableList: React.FC<{}> = () => {
             </Dropdown>
           ),
         ]}
-        pagination={{defaultCurrent:1,total}}
+        pagination={{defaultCurrent:1, total}}
         request={(params:any, sorter, filter) => {
-          queryRule({...params}).then(res => {
-            handlerTotal(res.total);
-            // 将租户信息传入新建租户账户页面中
-            let arr = res.data.map(item => {
-              return {"id":item.id ,"entityid": item.entityid, "entityname": item.entityname}
-            });
-            let hash = {};
-            arr = arr.reduce((arr:any, item:any) => {
-              hash[item.entityid] ? '' : hash[item.entityid] = true && arr.push(item);
-              return arr
-            }, [])
+          queryRule(params).then(res => {
+            // 记录请求回来的数据条数，稍后传入表格的分页器
+            setTotal(res.total);
+            // 去重并记录租户角色，稍后传入CreateForm表单中
+            let arr = removeSameFature(res.data);
             setEntitys([...arr]);
+          }).catch(err => {
+            console.log(err)
           });
-          return queryRule({...params});
+          // 返回Promise
+          return queryRule(params);
         }}
         columns={columns}
         rowSelection={{}}
@@ -193,12 +198,12 @@ const TableList: React.FC<{}> = () => {
       
       <ResetPasswordForm
         modalVisible={resetPassword}
-        onCancel={() => handleResetModalVisible(false)}
+        onCancel={() => setResetModalVisible(false)}
         onSubmit={() => {
           let usercode = form.getFieldsValue().usercode;
-          updateRule({id: recordItem.id, pwd: recordItem.pwd, usercode}).then(res => {
+          updateRule({id: recordItem.id, pwd: form.getFieldValue('pwd'), usercode}).then(res => {
             message.success('修改密码成功');
-            handleResetModalVisible(false);
+            setResetModalVisible(false);
           }).catch(err => {
             message.error('修改密码失败，请刷新页面后重试');
           })
@@ -243,7 +248,7 @@ const TableList: React.FC<{}> = () => {
         onSubmit={async (value) => {
           console.log(value);
         }}
-        onCancel={() => handleModalVisible(false)}
+        onCancel={() => setCreateModalVisible(false)}
         createModalVisible={createModalVisible}
         isSuccess={(val:boolean) => {
           setSuccess(val)
@@ -256,7 +261,7 @@ const TableList: React.FC<{}> = () => {
             console.log('成功')
           }}
           onCancel={() => {
-            handleUpdateModalVisible(false);
+            setUpdateModalVisible(false);
             setStepFormValues({});
           }}
           updateModalVisible={updateModalVisible}

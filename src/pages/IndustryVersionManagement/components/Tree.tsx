@@ -40,7 +40,6 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
         setRoles([...selectedRoles]);
         props.getRoleMenucode(selectedRoles)
       }
-      console.log(selectedRoles)
     }
   };
   const columns = [
@@ -62,7 +61,6 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
               return (
                 <span key={item.menucode}>
                   <Checkbox
-                    
                     defaultChecked={item.isClick === '0'? false : true} 
                     onChange={(event) => {
                       item.isClick = (event.target.checked === false ? '0' : '1');

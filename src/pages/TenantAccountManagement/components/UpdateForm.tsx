@@ -1,52 +1,49 @@
 import React, { useState, useRef } from 'react';
 import { CheckCircleTwoTone } from '@ant-design/icons';
-import { Form, Button, Input, Modal, Radio, Select, Steps, Row, Col, Divider, Checkbox, message } from 'antd';
-
-import { updateRule } from '../service';
-import { TableListItem } from '../data.d';
-
+import { Form, Button, Input, Modal, Radio, Select, Steps, Row, Col, Divider, message } from 'antd';
+// 引入网络请求
+import { updateRule, queryRoleName, getDefaultRole, createUserRoles } from '../service';
+// 引入接口
+import { UpdateFormProps, FormValueType } from '../data.d';
 // 引入样式
 import '../../../assets/css/TenantAccountManager/index.css';
-// 表单值的接口
-export interface FormValueType {
-  userstatus?: number;
-  realname?: string;
-  usercode?: string;
-  cellphone?: number;
-  pwd?: string;
-}
-// 接收的props接口
-export interface UpdateFormProps {
-  onCancel: (flag?: boolean, formVals?: FormValueType) => void;
-  onSubmit: (values: FormValueType) => void;
-  updateModalVisible: boolean;
-  values: Partial<TableListItem>;
-  allEntity: string[];
-  isSuccess: (val:boolean) => void;
-}
 
-export interface UpdateFormState {
-  formVals: FormValueType;
-  currentStep: number;
-}
-
+// 从antd中获取所需组件
 const FormItem = Form.Item;
 const { Step } = Steps;
 const { Option } = Select;
-const formLayout = {
-  labelCol: { span: 5 },
-  wrapperCol: { span: 17 },
-};
 
 interface EntirysInfo {
   entityname: string;
   entityid: number;
 }
+// 步骤条的状态类型
+enum StepsStatusType {
+  error = "error",
+  wait = "wait",
+  process = "process",
+  finish = "finish",
+}
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => {
+  // 表单数据
   const [formVals, setFormVals] = useState<FormValueType>({});
+  // 每一步的current
   const [currentStep, setCurrentStep] = useState<number>(0);
+  // 当前步骤的status
+  const [stepsStatus, setStepsStatus] = useState<StepsStatusType>(StepsStatusType.process);
+  // 创建表单的实例
+  const [form] = Form.useForm();
+  // 版本信息
   const [entityInfo, setEntityInfo] = useState<EntirysInfo>({entityid: 0, entityname: ''});
+  const [selectRoles, setSelectRoles] = useState<any[]>([]);
+  // 新增用户的权限
+  const [userPermissions, setUserPermissions] = useState(0);
+  const userPer = useRef(0);
+  // 租户权限名称数据
+  const [roleName, setRoleName] = useState('');
+  // 修改时的用户默认角色
+  const [userDefaultRole, setUserDefaulRole] = useState(0);
   const {
     onSubmit: handleUpdate,
     onCancel: handleUpdateModalVisible,
@@ -54,12 +51,9 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
     values,
     allEntity
   } = props;
-  // 创建表单的实例
-  const [form] = Form.useForm();
+
   const forward = () => setCurrentStep(currentStep + 1);
-
   const backward = () => setCurrentStep(currentStep - 1);
-
   const handleNext = async (val:any) => {
     const fieldsValue = await form.validateFields();
     setFormVals({ ...formVals, ...fieldsValue });
@@ -69,7 +63,59 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
       handleUpdate({ ...formVals });
     }
   };
-
+  // 修改用户账号信息的请求
+  const updateUserInfo = () => {
+    form.validateFields().then(res => {
+      console.log(allEntity)
+      allEntity.forEach((item:any) => {
+        setEntityInfo({entityname: item.entityname, entityid: item.entityid});
+        if(item.entityname === res.entityname) {
+          let params = {...res};
+          delete params.entityname;
+          // 获取默认用户角色
+          getDefaultRole(res.usercode).then(res => {
+            if(res.success) {
+              setUserDefaulRole(res.data.id)
+            } else {
+              message.error(res.mesg);
+            }
+          }).catch(err => {
+            message.error('获取用户默认角色失败');
+          }) 
+          // 查询用户角色菜单
+          queryRoleName({entityid: item.entityid}).then(res => {
+            setSelectRoles(res.data);
+          }).catch(err => {
+            console.log(err);
+            message.error('获取用户角色菜单出错，请刷新页面后重试')
+          });
+          // 发送更新账户请求
+          updateRule({...params, id: values.id, entityid: item.entityid}).then(res => {
+            if(res.success) {
+              message.success('账号基本信息修改成功');
+              // 获取用户信息并设置state
+              setFormVals({...formVals, ...res.data})
+              if (currentStep < 2) {
+                forward();
+              }
+            } else {
+              if(res.mesg !== 'successful') {
+                message.error(res.mesg);
+              } else {
+                setStepsStatus(StepsStatusType.error);
+                message.error('修改账号失败，请刷新页面后重试');
+              }
+            }
+          }).catch(err => {
+            setStepsStatus(StepsStatusType.error);
+            message.error('修改账号失败，请刷新页面后重试');
+          })
+        }
+      }) 
+    }).catch(err => {
+      console.log(err);
+    })
+  }
   const renderContent = () => {
     if (currentStep === 1) {
       return (
@@ -80,46 +126,52 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
               <span className="info">{entityInfo.entityname}</span>
             </Col>
             <Col span="12">
-              <span className="label">区域机构：</span>
-              <span className="info">内容内容内容内容</span>
+              <span className="label">是否冻结：</span>
+              <span className="info">
+                {
+                  formVals.userstatus === 0 ? "正常" : "冻结"
+                }
+              </span>
             </Col>
           </Row>
           <Row className="tenant-account-info">
             <Col span="12">
               <span className="label">登录用户名：</span>
-              <span className="info">{form.getFieldsValue().usercode}</span>
+              <span className="info">{formVals.usercode}</span>
             </Col>
             <Col span="12">
               <span className="label name">姓</span><span className="name-end">名：</span>
-              <span className="info">{form.getFieldsValue().realname}</span>
+              <span className="info">{formVals.realname}</span>
             </Col>
           </Row>
           <Row className="tenant-account-info">
             <Col span="12">
               <span className="label">登录密码：</span>
-              <span className="info">{form.getFieldsValue().pwd}</span>
+              <span className="info">{formVals.pwd}</span>
             </Col>
             <Col span="12">
               <span className="label">手机号码：</span>
-              <span className="info">{form.getFieldsValue().cellphone}</span>
-            </Col>
-          </Row>
-          <Row className="tenant-account-info">
-            <Col span="24">
-              <span className="label">是否冻结：</span>
-              <span className="info">
-                {
-                  form.getFieldsValue().userstatus === 0 ? "正常" : "冻结"
-                }
-              </span>
+              <span className="info">{formVals.cellphone}</span>
             </Col>
           </Row>
           <Divider />
           <Row>
+          <div className="account-role-title">选择账号权限</div>
             <Col span="24">
-              {
-
-              }
+              <Radio.Group defaultValue={userDefaultRole}>
+                {
+                  selectRoles.map(item => {
+                    return (
+                      <Radio key={item.id} value={item.id} onChange={(event) => {
+                        setUserPermissions(event.target.value);
+                        userPer.current = event.target.value;
+                      }}>
+                        {item.rolename}
+                      </Radio>
+                    )
+                  })
+                }
+              </Radio.Group>
             </Col>
           </Row>
         </>
@@ -136,36 +188,43 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
           </Row>
           <Row className="tenant-account-info">
             <Col span="12">
-              <span className="label">商家选择：</span><span className="info">填写信息填写信息填写信息</span>
+              <span className="label">商家选择：</span>
+              <span className="info">{entityInfo.entityname}</span>
             </Col>
             <Col span="12">
-              <span className="label">区域机构：</span><span className="info">填写信息填写信息填写信息</span>
-            </Col>
-          </Row>
-          <Row className="tenant-account-info">
-            <Col span="12">
-              <span className="label">登录用户名：</span><span className="info">SHKLSFLKLSLL</span>
-            </Col>
-            <Col span="12">
-              <span className="label name">姓</span><span className="name-end">名：</span><span className="info">填写信</span>
+              <span className="label">是否冻结：</span>
+              <span className="info">
+                {
+                  formVals.userstatus === 0 ? "正常" : "冻结"
+                }
+              </span>
             </Col>
           </Row>
           <Row className="tenant-account-info">
             <Col span="12">
-              <span className="label">登录密码：</span><span className="info">AAAAAAAA</span>
+              <span className="label">登录用户名：</span>
+              <span className="info">{formVals.usercode}</span>
             </Col>
             <Col span="12">
-              <span className="label">手机号码：</span><span className="info">131-3546-1547</span>
+              <span className="label name">姓</span>
+              <span className="name-end">名：</span>
+              <span className="info">{formVals.realname}</span>
+            </Col>
+          </Row>
+          <Row className="tenant-account-info">
+            <Col span="12">
+              <span className="label">登录密码：</span>
+              <span className="info">{formVals.pwd}</span>
+            </Col>
+            <Col span="12">
+              <span className="label">手机号码：</span>
+              <span className="info">{formVals.cellphone}</span>
             </Col>
           </Row>
           <Row className="tenant-account-info">
             <Col span="24">
-              <span className="label">是否冻结：</span><span className="info">公开</span>
-            </Col>
-          </Row>
-          <Row className="tenant-account-info">
-            <Col span="24">
-              <span className="label">租户权限：</span><span className="info">管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员，管理员，超级管理员</span>
+              <span className="label">租户权限：</span>
+              <span className="info">{roleName}</span>
             </Col>
           </Row>
         </>
@@ -176,12 +235,13 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
       <Row >
         <Col span="12">
           <FormItem
-            name="id"
+            name="entityname"
             label="租户选择"
             extra="请选择租户类型"
             rules={[{ required: true, message: '请选择租户类型' }]}
           >
             <Select placeholder="请选择">
+              {console.log(allEntity)}
               {
                 allEntity.map((item:any) => {
                   return (
@@ -243,20 +303,6 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
         <Row>
           <Col span="12">
             <FormItem
-              name="pwd"
-              label="登录密码"
-              extra="不能为空，由3-16位英文字符、数字组成"
-              rules={[{ 
-                required: true, 
-                message: '不能为空，由3-16位英文字符、数字组成',
-                pattern: new RegExp(/^[0-9a-zA-Z]{3,16}$/)
-              }]}
-            >
-              <Input placeholder="请输入" />
-            </FormItem>
-          </Col>
-          <Col span="12">
-            <FormItem
               name="userstatus"
               label="是否冻结"
               rules={[{ required: true, message: '请选择账户状态' }]}
@@ -281,15 +327,41 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
           </Button>
           <Button onClick={() => handleUpdateModalVisible(false)}>取消</Button>
           <Button type="primary" onClick={() => {
-            
-            let params:any = {...formVals,id: values.id, ...entityInfo};
-            console.log({...params})
-            updateRule({...params}).then(res => {
-              handleNext(form.getFieldsValue());
-            }).catch(err => {
-              message.error('创建账号失败，请刷新页面后重试')
-            });
-            }}>
+            if(userPer.current === 0) {
+              createUserRoles({roleId: userDefaultRole, userCode: formVals.usercode}).then(res => {
+                if(res.success) {
+                  message.success('账号配置角色成功');
+                  setRoleName(res.data.rolename);
+                  if (currentStep < 2) {
+                    forward();
+                  }
+                } else {
+                  setStepsStatus(StepsStatusType.error);
+                  message.success('账号配置角色失败,请刷新后重试');
+                }
+              }).catch(err => {
+                setStepsStatus(StepsStatusType.error);
+                message.success('账号配置角色失败,请刷新后重试');
+              });
+            } else {
+              createUserRoles({roleId: userPer.current, userCode: formVals.usercode}).then(res => {
+                if(res.success) {
+                  message.success('账号配置角色成功');
+                  setRoleName(res.data.rolename);
+                  if (currentStep < 2) {
+                    forward();
+                  }
+                } else {
+                  setStepsStatus(StepsStatusType.error);
+                  message.success('账号配置角色失败,请刷新后重试');
+                }
+              }).catch(err => {
+                setStepsStatus(StepsStatusType.error);
+                message.success('账号配置角色失败,请刷新后重试');
+              });
+            }
+          }
+          }>
             下一步
           </Button>
         </>
@@ -299,7 +371,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
       return (
         <>
           <Button type="primary" onClick={() => {
-            handleUpdateModalVisible(false, values);
+            handleUpdateModalVisible(false);
             props.isSuccess(true);
             }}>
             关闭
@@ -310,14 +382,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
     return (
       <>
         <Button onClick={() => handleUpdateModalVisible(false)}>取消</Button>
-        <Button type="primary" onClick={() => {
-          handleNext(form.getFieldsValue());
-          allEntity.forEach((item:any) => {
-            if(item.id === form.getFieldValue('id')) {
-              setEntityInfo({entityname: item.entityname, entityid: item.entityid});
-            }
-          })
-          }}>
+        <Button type="primary" onClick={() => updateUserInfo()}>
           下一步
         </Button>
       </>
@@ -342,11 +407,12 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
       </Steps>
       <Form
         labelAlign="left"
-        {...formLayout}
+        labelCol={{span: 5}}
+        wrapperCol={{span: 17}}
         form={form}
         className="create-account-form"
         initialValues={{
-          id: values.entityid,
+          entityname: values.entityname,
           realname: values.realname,
           usercode: values.usercode,
           cellphone: values.cellphone,
