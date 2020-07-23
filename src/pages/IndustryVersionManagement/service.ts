@@ -15,14 +15,16 @@ export async function createMenu(params: TableListItem) {
 
 // 添加行业版本
 export async function addRule(params: TableListItem) {
+  console.log(params)
   const msg:any = await request('/api/entityrole/updateEntityrole', {
     method: 'POST',
     params: {
       rolename: params.industyVersionName,
-      memo: params.note,
+      memo: params?.note,
       menuCodes: params.menuCodes
     }
   });
+  console.log(msg)
   return msg;
 }
 

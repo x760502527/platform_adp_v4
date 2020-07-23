@@ -27,7 +27,6 @@ export interface FormValueType {
 // 接收的props接口
 export interface UpdateFormProps {
   onCancel: (flag?: boolean, formVals?: FormValueType) => void;
-  onSubmit: (values: FormValueType) => void;
   updateModalVisible: boolean;
   values: Partial<TableListItem>;
   allEntity: string[];

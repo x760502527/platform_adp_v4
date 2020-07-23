@@ -23,7 +23,7 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
   const [selectedRoles, setRoles] = useState<string[]>([])
   // 选中的菜单
   const [selectedRow, setRows] = useState<string[]>([]);
-
+  // 获取初始的menucode
   const getInitMenucode = (sourceData:menuListItem[]) => {
     if(sourceData.length === 0) {
       return
@@ -88,7 +88,6 @@ let UpdateTree: React.FC<TreeProps> = (props:TreeProps) => {
                 setRows([...selectedRow])
                 props.getRoleMenucode(selectedRoles);
                 props.getRowMenucode(selectedRow);
-                console.log(selectedRoles, selectedRow)
               }}
             >
               {text}

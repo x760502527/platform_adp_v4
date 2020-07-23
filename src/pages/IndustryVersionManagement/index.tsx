@@ -53,6 +53,8 @@ const TableList: React.FC<{}> = () => {
   // 默认的选中权限数据/菜单数据
   const [selectedRoles, setRoles] = useState<string[]>([])
   const [selectedMenu, setSelectedMenu] = useState<string[]>([]);
+  // 创建表单的实例
+  const [form] = Form.useForm();
   const getRowMenucode = (code:string[]) => {
     rowMenucode = code.slice(0);
   }
@@ -109,7 +111,6 @@ const TableList: React.FC<{}> = () => {
   useEffect(() => {
     // 获取菜单树的方法
     queryMenu().then(res => {
-      console.log('获取菜单树')
       if(res.success) {
         changeSourceData(res.data)
       }
@@ -133,20 +134,24 @@ const TableList: React.FC<{}> = () => {
     return menuCodes;
   }
   // 创建行业版本的方法
-  const onSubmit = (industyVersionName:string, note: string) => {
-    let menuCodes:string = handlerNoSelectedRow(rowMenucode, roleMenucode);
-    if(industyVersionName == '' || note == '') {
-      return
-    }
-    let msg = addRule({industyVersionName, note, menuCodes});
-    msg.then(res => {
-      if(res.success) {
-        actionRef.current?.reloadAndRest();
-        clearMenus();
-      }
+  const onSubmit = (industyVersionName:string, note?: string) => {
+    form.validateFields().then(res => {
+      let menuCodes:string = handlerNoSelectedRow(rowMenucode, roleMenucode);
+      let msg = addRule({industyVersionName, note, menuCodes});
+      msg.then(res => {
+        if(res.success) {
+          message.success('创建行业版本成功');
+          actionRef.current?.reloadAndRest();
+          clearMenus();
+        } else {
+          message.error(res.mesg);
+        }
+      }).catch(err => {
+        message.error('行业版本创建失败，请刷新页面后重试');
+      })
     }).catch(err => {
-      message.error('行业版本创建失败，请刷新页面后重试');
-    })
+      message.error('请输入行业版本名称');
+    });
   }
   // 修改行业版本的方法
   const onSubmitUpdate = (record:TableListItem) => {
@@ -249,6 +254,7 @@ const TableList: React.FC<{}> = () => {
             onClick={() => {
               changeRecord(recorditem);
               queryMenu(recorditem.key).then(res => {
+                console.log(res);
                 // 设置修改菜单的数据
                 setUpdateSourceData([...res.data]);
                 // 然后显示更新组件
@@ -339,6 +345,7 @@ const TableList: React.FC<{}> = () => {
         modalVisible={createModalVisible}
         >
         <Form 
+        form={form}
         name="control-ref"
         className="createForm"
         >
@@ -359,8 +366,7 @@ const TableList: React.FC<{}> = () => {
             <Col span="10" offset="2">
               <Form.Item 
               name="note" 
-              label="备注" 
-              rules={[{ required: true, message: '请输入内容!'}]}
+              label="备注"
               {...formLayout}>
                 <Input 
                   value={note} 
@@ -429,7 +435,6 @@ const TableList: React.FC<{}> = () => {
                 {...formLayout}
                 name="note" 
                 label="备注" 
-                rules={[{ required: true }]}
                 initialValue={record.note}
                 >
                 <Input 

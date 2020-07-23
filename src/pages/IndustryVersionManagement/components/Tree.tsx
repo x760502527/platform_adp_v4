@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { Table, Checkbox, Space } from 'antd';
-
+// 菜单树的接口
 interface TreeProps {
   getRowMenucode(data:any): void;
   getRoleMenucode(data:any): void;
   data: any;
 }
+// 菜单表格数据接口规范
+interface TableList {
+  children: TableList[];
+  isClick: string;
+  menucode: string;
+  menuname: string;
+  operation: TableList[];
+}
 
 let Tree: React.FC<TreeProps> = (props:TreeProps) => {
   // 当前的选中权限数据
   const [selectedRoles, setRoles] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<TableList[]>([]);
   // 选中项
   const rowSelection = {
     checkStrictly: false,
@@ -18,7 +27,7 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
       console.log(selectedRowKeys);
     },
     onSelect: (record:any, selected:any, selectedRows:any, nativeEvent:any) => {
-      console.log(record)
+      setSelectedRows(selectedRows)
       // 改变record数据中的点击状态
       record.isClick = selected ? '1' : '0';
       // 取消勾选后赋权不可选，清空赋权数据
@@ -61,6 +70,7 @@ let Tree: React.FC<TreeProps> = (props:TreeProps) => {
               return (
                 <span key={item.menucode}>
                   <Checkbox
+                    disabled={selectedRows.indexOf(record) === -1 ? true : false}
                     defaultChecked={item.isClick === '0'? false : true} 
                     onChange={(event) => {
                       item.isClick = (event.target.checked === false ? '0' : '1');

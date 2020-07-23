@@ -257,9 +257,6 @@ const TableList: React.FC<{}> = () => {
       {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
           allEntity={entitys}
-          onSubmit={async (value) => {
-            console.log('成功')
-          }}
           onCancel={() => {
             setUpdateModalVisible(false);
             setStepFormValues({});
