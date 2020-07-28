@@ -299,6 +299,12 @@ const TableList: React.FC<{}> = () => {
         columns={columns}
         rowSelection={{}}
         rowClassName={(record, index) => {return index%2=== 1?"rowWhite":"rowDeep"}}
+        options={{
+          density:true,
+          fullScreen: false, 
+          reload:true, 
+          setting: true
+        }}
         request={(params, sorter, filter) => {
           // 将角色属性添加到请求参数中
           let tableParams = Object.assign(params);

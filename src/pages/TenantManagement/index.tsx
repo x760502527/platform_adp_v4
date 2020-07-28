@@ -200,6 +200,12 @@ const TableList: React.FC<{}> = () => {
           ),
         ]}
         tableAlertRender={false}
+        options={{
+          density:true,
+          fullScreen: false, 
+          reload:true, 
+          setting: true
+        }}
         request={async (params, sorter, filter) => {
           let cParams:any = {
             ...params,

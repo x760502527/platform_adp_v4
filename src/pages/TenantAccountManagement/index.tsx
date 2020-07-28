@@ -177,7 +177,14 @@ const TableList: React.FC<{}> = () => {
             </Dropdown>
           ),
         ]}
+        tableAlertRender={false}
         pagination={{defaultCurrent:1, total}}
+        options={{
+          density:true,
+          fullScreen: false, 
+          reload:true, 
+          setting: true
+        }}
         request={(params:any, sorter, filter) => {
           queryRule(params).then(res => {
             // 记录请求回来的数据条数，稍后传入表格的分页器
