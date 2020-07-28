@@ -62,7 +62,11 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
           delete params.id;
           // 查询用户角色菜单
           queryRoleName({entityid: item.entityid}).then(res => {
-            setSelectRoles(res.data);
+            if(res.success) {
+              setSelectRoles(res.data);
+            } else {
+              message.error(res.mesg);
+            }
           }).catch(err => {
             message.error('获取用户角色菜单出错，请刷新页面后重试')
           });
