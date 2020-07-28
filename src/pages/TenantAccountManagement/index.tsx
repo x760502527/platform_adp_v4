@@ -206,14 +206,20 @@ const TableList: React.FC<{}> = () => {
       <ResetPasswordForm
         modalVisible={resetPassword}
         onCancel={() => setResetModalVisible(false)}
-        onSubmit={() => {
+        onSubmit={async () => {
           let usercode = form.getFieldsValue().usercode;
-          updateRule({id: recordItem.id, pwd: form.getFieldValue('pwd'), usercode}).then(res => {
-            message.success('修改密码成功');
-            setResetModalVisible(false);
-          }).catch(err => {
+          await form.validateFields();
+          try {
+            let res = await updateRule({id: recordItem.id, pwd: form.getFieldValue('pwd'), usercode});
+            if(res.mesg === "successful") {
+              message.success('修改密码成功');
+              setResetModalVisible(false);
+            } else {
+              message.error("修改密码失败:"+res.mesg)
+            }
+          } catch {
             message.error('修改密码失败，请刷新页面后重试');
-          })
+          }
         }}
       >
         <Form
@@ -243,8 +249,20 @@ const TableList: React.FC<{}> = () => {
           <Form.Item 
             label="确认密码"
             name="samePwd" 
-            rules={[{ required: true, message: '再次输入密码，和新密码保持一致' }]}
-            extra="再次输入密码，和新密码保持一致"
+            rules={[
+              { 
+                required: true, 
+                message: '再次输入密码，和新密码保持一致',
+              },
+              ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  if (!value || getFieldValue('pwd') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject('再次输入密码，和新密码保持一致');
+                },
+              })
+            ]}
             >
             <Input.Password visibilityToggle={false} />
           </Form.Item>

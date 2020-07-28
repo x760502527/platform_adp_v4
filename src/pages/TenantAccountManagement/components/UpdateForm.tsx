@@ -69,6 +69,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => {
           // 获取默认用户角色
           getDefaultRole(res.usercode).then(res => {
             if(res.success) {
+              console.log(res.data)
               setUserDefaulRole(res.data.id)
             } else {
               message.error(res.mesg);

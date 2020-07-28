@@ -5,8 +5,6 @@ interface TreeProps {
   getRowMenucode(data:any): void;
   getRoleMenucode(data:any): void;
   data: any;
-  selectedRoles: string[];
-  selectedMenu: string[];
 }
 
 interface menuListItem {

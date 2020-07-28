@@ -326,7 +326,6 @@ const TableList: React.FC<{}> = () => {
                 <Menu
                   onClick={async (e) => {
                     if (e.key === 'remove') {
-                      // await handleRemove(selectedRows);
                       action.reload();
                     }
                   }}
@@ -453,12 +452,15 @@ const TableList: React.FC<{}> = () => {
           </Row>
           <Form.Item>
             <UpdateTree
-              selectedRoles={selectedRoles}
-              selectedMenu={selectedMenu} 
               getRowMenucode={getRowMenucode} 
               getRoleMenucode={getRoleMenucode} 
               data={updateSourceData}
             />
+            {/* <UpdateTree1
+              getRowMenucode={getRowMenucode} 
+              getRoleMenucode={getRoleMenucode} 
+              data={updateSourceData}
+            /> */}
           </Form.Item>
           <Divider />
           <Row justify={"end"}>
